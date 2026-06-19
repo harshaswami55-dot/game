@@ -3,2152 +3,1341 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Color Alchemist</title>
+  <title>Neon Surge</title>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-MTDG6ZLPLT"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag("js", new Date());
-
     gtag("config", "G-MTDG6ZLPLT");
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
 
+    :root {
+      --cyan: #35f7ff;
+      --pink: #ff2cfb;
+      --lime: #9dff4f;
+      --amber: #ffd166;
+      --red: #ff3864;
+      --panel: rgba(4, 8, 22, 0.52);
+    }
+
+    html,
     body {
+      width: 100%;
+      height: 100%;
       margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #111426;
-      color: #f6edd3;
-      font-family: Inter, Arial, sans-serif;
       overflow: hidden;
+      background: #02030a;
+      color: #e9fbff;
+      font-family: Rajdhani, Arial, sans-serif;
       user-select: none;
       touch-action: none;
     }
 
-    .game-shell {
-      width: min(1040px, 100vw);
-      height: min(760px, 100vh);
-      display: grid;
-      grid-template-rows: auto 1fr;
-      background: linear-gradient(180deg, #1a1d35, #0b0d18);
-      border: 1px solid rgba(220, 184, 103, 0.35);
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
     }
 
-    header {
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      background:
+        radial-gradient(circle at 50% 115%, rgba(255, 44, 251, 0.13), transparent 42%),
+        radial-gradient(circle at 15% 10%, rgba(53, 247, 255, 0.08), transparent 28%),
+        linear-gradient(90deg, rgba(2, 3, 10, 0.6), transparent 14%, transparent 86%, rgba(2, 3, 10, 0.6));
+    }
+
+    .topbar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
       display: grid;
-      grid-template-columns: 1fr auto 1.25fr;
-      align-items: center;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
       gap: 16px;
-      padding: 14px 20px;
-      border-bottom: 1px solid rgba(220, 184, 103, 0.2);
-      background: rgba(8, 10, 22, 0.55);
+    }
+
+    .brand {
+      min-width: 0;
     }
 
     h1 {
       margin: 0;
-      color: #ffd978;
-      font-size: clamp(24px, 4vw, 42px);
+      font-family: Orbitron, Rajdhani, sans-serif;
+      font-size: clamp(28px, 5vw, 64px);
+      line-height: 0.88;
       letter-spacing: 0;
-      font-family: Cinzel, Georgia, serif;
-      text-shadow: 0 0 24px rgba(255, 217, 120, 0.25);
+      text-transform: uppercase;
+      color: #f7feff;
+      text-shadow:
+        0 0 10px rgba(53, 247, 255, 0.95),
+        0 0 28px rgba(255, 44, 251, 0.7),
+        0 0 70px rgba(53, 247, 255, 0.4);
     }
 
-    .stats {
-      justify-self: end;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 10px 14px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    }
-
-    .stats strong {
-      color: #ffd978;
-      font-size: 17px;
-      font-family: Cinzel, Georgia, serif;
-    }
-
-    .cauldron {
-      width: 190px;
-      min-height: 92px;
-      position: relative;
-      display: grid;
-      place-items: center;
-      border: 2px solid #b9914d;
-      border-radius: 0 0 70px 70px;
-      background: #15182b;
-      box-shadow: inset 0 -20px 25px rgba(0, 0, 0, 0.35);
-      overflow: hidden;
-      padding: 46px 10px 10px;
-      text-align: center;
-    }
-
-    .cauldron::before {
-      content: "";
-      position: absolute;
-      top: 10px;
-      width: 132px;
-      height: 28px;
-      border-radius: 50%;
-      background:
-        radial-gradient(ellipse at 35% 30%, rgba(255,255,255,.45), transparent 28%),
-        var(--liquid-color, var(--target-color, purple));
-      box-shadow: 0 0 25px var(--liquid-color, var(--target-color, purple));
-      animation: cauldronSlosh 3.2s ease-in-out infinite;
-    }
-
-    .cauldron::after {
-      content: "";
-      position: absolute;
-      top: 14px;
-      width: 126px;
-      height: 18px;
-      border-radius: 50%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.26), transparent);
-      opacity: .65;
-      transform-origin: center;
-      animation: cauldronWave 2.4s ease-in-out infinite;
-      mix-blend-mode: screen;
-    }
-
-    @keyframes cauldronSlosh {
-      0%, 100% { transform: rotate(-1.8deg) scaleX(1.04); }
-      50% { transform: rotate(2deg) scaleX(.95); }
-    }
-
-    @keyframes cauldronWave {
-      0%, 100% { transform: translateX(-8px) scaleY(.72); }
-      50% { transform: translateX(8px) scaleY(1.08); }
-    }
-
-    .cauldron span {
-      position: relative;
-      padding: 3px 8px;
-      color: #fff2c2;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      line-height: 1.25;
-      background: rgba(0, 0, 0, 0.35);
-      border-radius: 6px;
-    }
-
-    .board-wrap {
-      position: relative;
-      display: grid;
-      place-items: center;
-      min-height: 0;
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      cursor: pointer;
-    }
-
-    .message,
-    .lab-screen,
-    .settings-screen {
-      position: absolute;
-      inset: 0;
-      display: none;
-      place-items: center;
-      background: rgba(5, 6, 13, 0.76);
-      padding: 18px;
-    }
-
-    .message.show,
-    .lab-screen.show,
-    .settings-screen.show {
-      display: grid;
-    }
-
-    .panel,
-    .lab-panel,
-    .settings-panel {
-      width: min(760px, 94vw);
-      max-height: 94%;
-      overflow: auto;
-      padding: 24px;
-      text-align: center;
-      background: #171a2e;
-      border: 1px solid rgba(220, 184, 103, 0.6);
-      border-radius: 8px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      pointer-events: auto;
-    }
-
-    .panel {
-      width: min(440px, 86vw);
-    }
-
-    .panel h2,
-    .lab-panel h2,
-    .settings-panel h2 {
-      margin: 0 0 10px;
-      color: #ffd978;
-      font-size: 34px;
-      font-family: Cinzel, Georgia, serif;
-    }
-
-    .panel p,
-    .lab-panel p,
-    .settings-panel p {
-      margin: 0 0 18px;
-      font-family: Arial, sans-serif;
-      line-height: 1.5;
-      color: rgba(246, 237, 211, 0.82);
-    }
-
-    .lab-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin: 16px 0;
-      text-align: left;
-      font-family: Arial, sans-serif;
-    }
-
-    .lab-card {
-      padding: 14px;
-      border: 1px solid rgba(220, 184, 103, 0.28);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .lab-card h3 {
-      margin: 0 0 6px;
-      color: #ffe0a0;
-      font-size: 16px;
-    }
-
-    .lab-card p {
-      min-height: 42px;
-      margin: 0 0 12px;
+    .subtitle {
+      margin-top: 8px;
+      color: rgba(202, 250, 255, 0.72);
       font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(53, 247, 255, 0.55);
     }
 
-    .actions {
+    .stat-row {
+      justify-self: center;
       display: flex;
+      gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
-      margin-top: 12px;
     }
 
-    .powerbar {
-      position: absolute;
-      left: 16px;
-      bottom: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      pointer-events: auto;
-      font-family: Arial, sans-serif;
-    }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 14px;
-      margin: 14px 0;
-      border: 1px solid rgba(220, 184, 103, 0.25);
+    .stat {
+      min-width: 112px;
+      padding: 10px 12px;
+      border: 1px solid rgba(53, 247, 255, 0.42);
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      font-family: Arial, sans-serif;
-      text-align: left;
+      background: linear-gradient(180deg, rgba(8, 20, 46, 0.74), rgba(4, 7, 20, 0.42));
+      box-shadow:
+        inset 0 0 22px rgba(53, 247, 255, 0.08),
+        0 0 24px rgba(53, 247, 255, 0.15);
+      text-align: center;
+      backdrop-filter: blur(7px);
     }
 
-    .setting-row input {
-      width: 22px;
-      height: 22px;
-      accent-color: #d5a84f;
-    }
-
-    button {
-      padding: 10px 14px;
-      border: 1px solid #ffe3a0;
-      border-radius: 6px;
-      background: #d5a84f;
-      color: #18110a;
+    .stat span {
+      display: block;
+      color: rgba(202, 250, 255, 0.62);
+      font-size: 11px;
       font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 2px;
+      color: #ffffff;
+      font-family: Orbitron, Rajdhani, sans-serif;
+      font-size: 24px;
+      text-shadow: 0 0 14px rgba(53, 247, 255, 0.9);
+    }
+
+    .right-panel {
+      justify-self: end;
+      width: min(330px, 32vw);
+      display: grid;
+      gap: 8px;
+    }
+
+    .health-shell,
+    .power-shell {
+      height: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      background: rgba(2, 5, 14, 0.72);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.88), 0 0 22px rgba(255, 44, 251, 0.12);
+      overflow: hidden;
+    }
+
+    #healthFill,
+    #powerFill {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      transform-origin: left center;
+      background: linear-gradient(90deg, var(--red), #ff9a3c, var(--lime));
+      box-shadow: 0 0 18px rgba(157, 255, 79, 0.9);
+    }
+
+    #powerFill {
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      box-shadow: 0 0 18px rgba(255, 44, 251, 0.9);
+    }
+
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      color: rgba(233, 251, 255, 0.72);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(53, 247, 255, 0.45);
+    }
+
+    #statusLine {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: right;
+      text-shadow: 0 0 14px rgba(255, 44, 251, 0.85);
+    }
+
+    #damageOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(circle, transparent 42%, rgba(255, 32, 84, 0.34) 76%, rgba(255, 32, 84, 0.62)),
+        linear-gradient(90deg, rgba(53, 247, 255, 0.1), transparent, rgba(255, 44, 251, 0.13));
+      mix-blend-mode: screen;
+      transition: opacity 180ms ease;
+    }
+
+    #damageOverlay.hit {
+      opacity: 1;
+      animation: hitPulse 360ms ease-out;
+    }
+
+    @keyframes hitPulse {
+      0% { filter: hue-rotate(0deg) saturate(1.5); transform: scale(1); }
+      45% { filter: hue-rotate(28deg) saturate(2.4); transform: scale(1.025); }
+      100% { filter: hue-rotate(0deg) saturate(1); transform: scale(1); }
+    }
+
+    .center-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: radial-gradient(circle at 50% 50%, rgba(11, 18, 42, 0.42), rgba(2, 3, 10, 0.78));
+      pointer-events: auto;
+    }
+
+    .center-panel.hidden {
+      display: none;
+    }
+
+    .modal {
+      width: min(560px, 92vw);
+      padding: 28px;
+      border: 1px solid rgba(53, 247, 255, 0.58);
+      border-radius: 8px;
+      background:
+        linear-gradient(160deg, rgba(7, 18, 44, 0.86), rgba(10, 4, 27, 0.78)),
+        radial-gradient(circle at 20% 0%, rgba(53, 247, 255, 0.22), transparent 35%);
+      box-shadow:
+        0 0 34px rgba(53, 247, 255, 0.35),
+        0 0 90px rgba(255, 44, 251, 0.22),
+        inset 0 0 28px rgba(255, 255, 255, 0.04);
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-family: Orbitron, Rajdhani, sans-serif;
+      font-size: clamp(34px, 7vw, 74px);
+      line-height: 0.95;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(53, 247, 255, 0.95), 0 0 48px rgba(255, 44, 251, 0.65);
+    }
+
+    .modal p {
+      margin: 0 auto 18px;
+      max-width: 430px;
+      color: rgba(233, 251, 255, 0.78);
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .modal button {
+      min-width: 176px;
+      padding: 13px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      border-radius: 7px;
+      background: linear-gradient(90deg, rgba(53, 247, 255, 0.95), rgba(255, 44, 251, 0.95));
+      color: #030512;
+      font-family: Orbitron, Rajdhani, sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      text-transform: uppercase;
       cursor: pointer;
-      font-family: Inter, Arial, sans-serif;
+      box-shadow: 0 0 20px rgba(53, 247, 255, 0.55), 0 0 44px rgba(255, 44, 251, 0.32);
     }
 
-    button.secondary {
-      background: #22283f;
-      color: #ffe8b2;
-      border-color: rgba(220, 184, 103, 0.45);
+    .scoreline {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+      color: #fff;
+      font-family: Orbitron, Rajdhani, sans-serif;
+      text-shadow: 0 0 14px rgba(255, 44, 251, 0.72);
     }
 
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
+    #joystick {
+      position: fixed;
+      left: 22px;
+      bottom: 22px;
+      z-index: 7;
+      width: 126px;
+      height: 126px;
+      display: none;
+      border: 1px solid rgba(53, 247, 255, 0.32);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(53, 247, 255, 0.13), rgba(53, 247, 255, 0.04) 55%, transparent 70%);
+      box-shadow: 0 0 26px rgba(53, 247, 255, 0.2), inset 0 0 25px rgba(53, 247, 255, 0.06);
+      pointer-events: auto;
     }
 
-    @media (max-width: 760px) {
-      .game-shell { height: 100vh; }
-      header {
-        grid-template-columns: 1fr 1fr;
-        padding: 10px;
+    #knob {
+      position: absolute;
+      left: 43px;
+      top: 43px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 16px var(--cyan), 0 0 36px var(--pink);
+    }
+
+    #aimPad {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 7;
+      width: 138px;
+      height: 138px;
+      display: none;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 44, 251, 0.28);
+      background: radial-gradient(circle, rgba(255, 44, 251, 0.11), transparent 68%);
+      pointer-events: none;
+    }
+
+    #aimPad::after {
+      content: "";
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: 56px;
+      height: 2px;
+      transform: translateY(-50%);
+      background: linear-gradient(90deg, var(--pink), transparent);
+      box-shadow: 0 0 12px var(--pink);
+    }
+
+    @media (pointer: coarse), (max-width: 820px) {
+      #joystick,
+      #aimPad { display: block; }
+
+      .topbar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        grid-template-columns: 1fr;
+        gap: 8px;
       }
-      h1 { grid-column: 1 / -1; }
-      .cauldron {
-        width: 158px;
-        min-height: 84px;
+
+      .stat-row {
+        justify-self: start;
       }
-      .stats {
-        display: grid;
-        gap: 4px;
-        font-size: 12px;
+
+      .stat {
+        min-width: 90px;
+        padding: 7px 9px;
       }
-      .lab-grid { grid-template-columns: 1fr; }
-      .powerbar {
-        right: 16px;
-        justify-content: center;
+
+      .stat strong {
+        font-size: 18px;
+      }
+
+      .right-panel {
+        justify-self: stretch;
+        width: auto;
+        max-width: 360px;
+      }
+
+      #statusLine {
+        text-align: left;
+        font-size: 13px;
+      }
+
+      .subtitle {
+        display: none;
       }
     }
   </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
-  <main class="game-shell">
-    <header>
-      <h1>Color Alchemist</h1>
-      <div class="cauldron" id="cauldron">
-        <span id="targetLabel">Target</span>
+  <div id="game"></div>
+
+  <div id="hud">
+    <div class="topbar">
+      <div class="brand">
+        <h1>Neon Surge</h1>
+        <div class="subtitle">WASD or arrows to move · aim with cursor · survive the surge</div>
       </div>
-      <div class="stats">
-        <div>Level: <strong id="level">1</strong></div>
-        <div>Lives: <strong id="lives">5</strong></div>
-        <div>Shards: <strong id="shards">0</strong></div>
-        <div>Moves: <strong id="moves">0</strong></div>
-        <div>Score: <strong id="score">0</strong></div>
+      <div class="stat-row">
+        <div class="stat"><span>Score</span><strong id="score">0</strong></div>
+        <div class="stat"><span>Wave</span><strong id="wave">1</strong></div>
+        <div class="stat"><span>Combo</span><strong id="combo">x1</strong></div>
       </div>
-    </header>
-
-    <section class="board-wrap">
-      <canvas id="gameCanvas" aria-label="Color Alchemist puzzle board"></canvas>
-
-      <div class="powerbar">
-        <button id="purifyAllButton" class="secondary">Purify All</button>
-        <button id="extraMoveButton" class="secondary">Extra Move</button>
-        <button id="revealButton" class="secondary">Color Reveal</button>
-        <button id="dailyButton" class="secondary">Daily</button>
-        <button id="labButton" class="secondary">Lab</button>
-        <button id="settingsButton" class="secondary">Settings</button>
+      <div class="right-panel">
+        <div class="bar-labels"><span>Shield</span><span id="healthText">100%</span></div>
+        <div class="health-shell"><div id="healthFill"></div></div>
+        <div class="bar-labels"><span>Surge Power</span><span id="powerText">Ready soon</span></div>
+        <div class="power-shell"><div id="powerFill"></div></div>
+        <div id="statusLine">Wave breach imminent</div>
       </div>
+    </div>
+  </div>
 
-      <div class="message" id="message">
-        <div class="panel">
-          <h2 id="messageTitle">Level Complete</h2>
-          <p id="messageText">You brewed the target color.</p>
-          <div class="actions">
-            <button id="restartButton">Continue</button>
-            <button id="messageLabButton" class="secondary">Open Lab</button>
-          </div>
-        </div>
+  <div id="damageOverlay"></div>
+  <div id="joystick"><div id="knob"></div></div>
+  <div id="aimPad"></div>
+
+  <div id="startScreen" class="center-panel">
+    <div class="modal">
+      <h2>Neon Surge</h2>
+      <p>Drift through the void arena, aim with your pointer, and burn down wave after wave before the swarm cracks your shield.</p>
+      <button id="startButton">Start Surge</button>
+    </div>
+  </div>
+
+  <div id="gameOverScreen" class="center-panel hidden">
+    <div class="modal">
+      <h2>Game Over</h2>
+      <p>The arena swallowed the signal. Reboot the orb and punch a brighter hole through the next wave.</p>
+      <div class="scoreline">
+        <span>Score <strong id="finalScore">0</strong></span>
+        <span>Wave <strong id="finalWave">1</strong></span>
       </div>
+      <button id="restartButton">Run It Back</button>
+    </div>
+  </div>
 
-      <div class="lab-screen" id="labScreen">
-        <div class="lab-panel">
-          <h2>Alchemist's Lab</h2>
-          <p id="labSummary">Spend Essence Shards on permanent upgrades and active power-ups.</p>
-          <div class="lab-grid" id="labCards"></div>
-          <div class="actions">
-            <button id="startLevelButton">Start Level</button>
-            <button id="closeLabButton" class="secondary">Close</button>
-            <button id="iapButton" class="secondary">Shard Bundle</button>
-          </div>
-        </div>
-      </div>
+  <script type="module">
+    import * as THREE from "three";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
-      <div class="settings-screen" id="settingsScreen">
-        <div class="settings-panel">
-          <h2>Settings</h2>
-          <p>Accessibility options for visual clarity.</p>
-          <label class="setting-row">
-            <span>Colorblind-friendly orb patterns</span>
-            <input type="checkbox" id="colorblindToggle" />
-          </label>
-          <div class="actions">
-            <button id="closeSettingsButton">Close</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+    const ARENA = 62;
+    const HALF_ARENA = ARENA / 2;
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const rand = (min, max) => min + Math.random() * (max - min);
+    const pick = list => list[Math.floor(Math.random() * list.length)];
+    const tmpVec = new THREE.Vector3();
+    const tmpVec2 = new THREE.Vector3();
 
-  <script>
-    "use strict";
-
-    /******************************************************************
-     * Utility helpers
-     ******************************************************************/
-    const DEFAULT_GRID_SIZE = 7;
-    const STARTING_MOVES = 24;
-    const TARGET_TOLERANCE = 0.88;
-    const MAX_LIVES = 5;
-    const LIFE_REGEN_MS = 20 * 60 * 1000;
-    const SAVE_KEY = "color-alchemist-save-v2";
-
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
-    }
-
-    function rgbToCss(rgb) {
-      const color = normalizeRgb(rgb);
-      return `rgb(${color.r}, ${color.g}, ${color.b})`;
-    }
-
-    function cloneColor(rgb) {
-      return normalizeRgb(rgb);
-    }
-
-    function normalizeRgb(rgb, fallback = { r: 255, g: 255, b: 255 }) {
-      const source = rgb || fallback;
-      return {
-        r: clamp(Number.isFinite(source.r) ? Math.round(source.r) : fallback.r, 0, 255),
-        g: clamp(Number.isFinite(source.g) ? Math.round(source.g) : fallback.g, 0, 255),
-        b: clamp(Number.isFinite(source.b) ? Math.round(source.b) : fallback.b, 0, 255)
-      };
-    }
-
-    function colorDistance(a, b) {
-      const dr = a.r - b.r;
-      const dg = a.g - b.g;
-      const db = a.b - b.b;
-      return Math.sqrt(dr * dr + dg * dg + db * db);
-    }
-
-    function colorSimilarity(a, b) {
-      const maxDistance = Math.sqrt(255 * 255 * 3);
-      return 1 - colorDistance(a, b) / maxDistance;
-    }
-
-    function todayKey() {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    function hashString(text) {
-      let hash = 2166136261;
-      for (let i = 0; i < text.length; i++) {
-        hash ^= text.charCodeAt(i);
-        hash = Math.imul(hash, 16777619);
+    class AudioManager {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.musicTimer = null;
       }
-      return hash >>> 0;
-    }
-
-    function createSeededRandom(seed) {
-      let state = seed >>> 0;
-      return function random() {
-        state = Math.imul(1664525, state) + 1013904223;
-        return ((state >>> 0) / 4294967296);
-      };
-    }
-
-    /******************************************************************
-     * SaveManager
-     *
-     * Persists progress, lives, currency, lab upgrades, and settings.
-     ******************************************************************/
-    const SaveManager = {
-      defaultState() {
-        return {
-          currentLevel: 0,
-          lives: MAX_LIVES,
-          lastLifeTimestamp: Date.now(),
-          currency: 0,
-          upgrades: {
-            gridSize: DEFAULT_GRID_SIZE,
-            metallicUnlocked: false,
-            gemUnlocked: false,
-            powers: {
-              purifyAll: 0,
-              extraMove: 0,
-              colorReveal: 0
-            }
-          },
-          settings: {
-            dailyDate: "",
-            completedDaily: false,
-            colorblindMode: false
-          },
-          interstitialCount: 0
-        };
-      },
-
-      load() {
-        try {
-          const raw = localStorage.getItem(SAVE_KEY);
-          const loaded = raw ? JSON.parse(raw) : {};
-          return this.merge(this.defaultState(), loaded);
-        } catch (error) {
-          console.warn("Save load failed; using defaults.", error);
-          return this.defaultState();
-        }
-      },
-
-      save(state) {
-        try {
-          localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-        } catch (error) {
-          console.warn("Save write failed; continuing without persistence.", error);
-        }
-      },
-
-      merge(base, incoming) {
-        for (const [key, value] of Object.entries(incoming || {})) {
-          if (value && typeof value === "object" && !Array.isArray(value) && base[key]) {
-            base[key] = this.merge(base[key], value);
-          } else {
-            base[key] = value;
-          }
-        }
-        return base;
-      }
-    };
-
-    /******************************************************************
-     * MonetizationManager
-     *
-     * Placeholder integration points for future ad/IAP SDK calls.
-     ******************************************************************/
-    const MonetizationManager = {
-      showRewardedAd(callback) {
-        console.log("[Monetization] Rewarded ad placeholder.");
-        if (typeof callback === "function") callback();
-      },
-
-      showInterstitial(state) {
-        if (state.interstitialCount > 0 && state.interstitialCount % 3 === 0) {
-          console.log("[Monetization] Interstitial placeholder between levels.");
-        }
-      },
-
-      triggerIAPOffer(offerId) {
-        console.log(`[Monetization] IAP offer placeholder: ${offerId}`);
-      }
-    };
-
-    /******************************************************************
-     * AudioManager
-     *
-     * Howler-backed placeholder sounds. Replace generatedToneSrc() with
-     * real file paths later without changing game logic.
-     ******************************************************************/
-    const AudioManager = {
-      sounds: {},
-      initialized: false,
 
       init() {
-        if (this.initialized) return;
-        try {
-          if (typeof Howl === "undefined") {
-            console.warn("Howler.js unavailable; audio placeholders disabled.");
-            window.addEventListener("load", () => this.init(), { once: true });
-            return;
-          }
-
-          this.sounds = {
-            mix: new Howl({ src: [this.generatedToneSrc(330, 0.08)], volume: 0.22 }),
-            chain: new Howl({ src: [this.generatedToneSrc(470, 0.07)], volume: 0.2 }),
-            spoil: new Howl({ src: [this.generatedToneSrc(110, 0.12)], volume: 0.18 }),
-            purify: new Howl({ src: [this.generatedToneSrc(660, 0.12)], volume: 0.2 }),
-            resonance: new Howl({ src: [this.generatedToneSrc(880, 0.16)], volume: 0.24 }),
-            complete: new Howl({ src: [this.generatedToneSrc(740, 0.22)], volume: 0.24 })
-          };
-          this.initialized = true;
-        } catch (error) {
-          console.warn("Audio init failed; continuing silently.", error);
-          this.sounds = {};
-        }
-      },
-
-      play(name) {
-        try {
-          const sound = this.sounds[name];
-          if (sound) sound.play();
-        } catch (error) {
-          console.warn("Audio playback failed.", error);
-        }
-      },
-
-      generatedToneSrc(frequency, duration) {
-        const sampleRate = 22050;
-        const samples = Math.floor(sampleRate * duration);
-        const dataSize = samples * 2;
-        const buffer = new ArrayBuffer(44 + dataSize);
-        const view = new DataView(buffer);
-
-        const writeString = (offset, text) => {
-          for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i));
-        };
-
-        writeString(0, "RIFF");
-        view.setUint32(4, 36 + dataSize, true);
-        writeString(8, "WAVE");
-        writeString(12, "fmt ");
-        view.setUint32(16, 16, true);
-        view.setUint16(20, 1, true);
-        view.setUint16(22, 1, true);
-        view.setUint32(24, sampleRate, true);
-        view.setUint32(28, sampleRate * 2, true);
-        view.setUint16(32, 2, true);
-        view.setUint16(34, 16, true);
-        writeString(36, "data");
-        view.setUint32(40, dataSize, true);
-
-        for (let i = 0; i < samples; i++) {
-          const t = i / sampleRate;
-          const envelope = Math.sin(Math.PI * i / samples);
-          const sample = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.28;
-          view.setInt16(44 + i * 2, sample * 32767, true);
-        }
-
-        const bytes = new Uint8Array(buffer);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        return `data:audio/wav;base64,${btoa(binary)}`;
-      }
-    };
-
-    /******************************************************************
-     * FeedbackManager
-     *
-     * Isolated haptic calls. Browsers that do not support vibration
-     * simply ignore it.
-     ******************************************************************/
-    const FeedbackManager = {
-      vibrate(pattern) {
-        if (navigator.vibrate) navigator.vibrate(pattern);
-      }
-    };
-
-    /******************************************************************
-     * LivesManager
-     *
-     * Timestamp-based energy regeneration that survives reloads.
-     ******************************************************************/
-    const LivesManager = {
-      applyRegen(state) {
-        const now = Date.now();
-        if (state.lives >= MAX_LIVES) {
-          state.lives = MAX_LIVES;
-          state.lastLifeTimestamp = now;
+        if (this.ctx) return;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) {
+          this.enabled = false;
           return;
         }
-
-        const elapsed = now - state.lastLifeTimestamp;
-        const gained = Math.floor(elapsed / LIFE_REGEN_MS);
-        if (gained > 0) {
-          state.lives = clamp(state.lives + gained, 0, MAX_LIVES);
-          state.lastLifeTimestamp += gained * LIFE_REGEN_MS;
-          if (state.lives >= MAX_LIVES) state.lastLifeTimestamp = now;
-        }
-      },
-
-      consume(state) {
-        this.applyRegen(state);
-        if (state.lives <= 0) return false;
-        state.lives -= 1;
-        if (state.lives === MAX_LIVES - 1) state.lastLifeTimestamp = Date.now();
-        return true;
-      },
-
-      timeToNextLife(state) {
-        this.applyRegen(state);
-        if (state.lives >= MAX_LIVES) return 0;
-        return Math.max(0, LIFE_REGEN_MS - (Date.now() - state.lastLifeTimestamp));
-      }
-    };
-
-    /******************************************************************
-     * ColorMixer
-     *
-     * Owns all color math. It uses subtractive pigment-style mixing:
-     * convert RGB to CMY, average pigments, then convert back to RGB.
-     * Complementary-ish mixtures desaturate into spoiled void.
-     ******************************************************************/
-    const ColorMixer = {
-      baseColors: [
-        { type: "red", rgb: { r: 220, g: 52, b: 56 } },
-        { type: "yellow", rgb: { r: 235, g: 205, b: 58 } },
-        { type: "blue", rgb: { r: 52, g: 104, b: 220 } }
-      ],
-
-      white: { type: "white", rgb: { r: 245, g: 241, b: 226 } },
-      void: { type: "void", rgb: { r: 22, g: 20, b: 27 }, spoiled: true },
-      metallic: { type: "metallic", rgb: { r: 203, g: 176, b: 114 }, metallic: true },
-      gem: { type: "gem", rgb: { r: 93, g: 232, b: 210 }, gem: true },
-
-      targets: [
-        { name: "Purple", rgb: { r: 128, g: 68, b: 180 } },
-        { name: "Green", rgb: { r: 60, g: 165, b: 95 } },
-        { name: "Orange", rgb: { r: 225, g: 125, b: 48 } },
-        { name: "Rose", rgb: { r: 215, g: 92, b: 120 } },
-        { name: "Teal", rgb: { r: 45, g: 175, b: 170 } }
-      ],
-
-      createRandomOrb(random = Math.random, upgrades = {}, spawnInfo = {}) {
-        const roll = random();
-        let template;
-
-        if (roll < 0.06) {
-          template = this.void;
-        } else if (roll < 0.12) {
-          template = this.white;
-        } else if (upgrades.gemUnlocked && roll < 0.15) {
-          template = this.gem;
-        } else if (upgrades.metallicUnlocked && roll < 0.18) {
-          template = this.metallic;
-        } else {
-          template = this.baseColors[Math.floor(random() * this.baseColors.length)];
-        }
-
-        const orb = this.makeOrb(template);
-        this.logSpawn(orb, spawnInfo);
-        return orb;
-      },
-
-      makeOrb(template) {
-        return {
-          type: template.type,
-          rgb: cloneColor(template.rgb),
-          spoiled: !!template.spoiled,
-          metallic: !!template.metallic,
-          gem: !!template.gem
-        };
-      },
-
-      logSpawn(orb, spawnInfo = {}) {
-        const location = Number.isInteger(spawnInfo.row) && Number.isInteger(spawnInfo.col)
-          ? ` row=${spawnInfo.row} col=${spawnInfo.col}`
-          : "";
-        const reason = spawnInfo.reason ? ` ${spawnInfo.reason}` : "";
-        console.log(
-          `[Color Alchemist spawn]${reason}${location} type=${orb.type} rgb=(${orb.rgb.r}, ${orb.rgb.g}, ${orb.rgb.b}) spoiled=${orb.spoiled}`
-        );
-      },
-
-      mix(orbA, orbB, context = {}) {
-        const objectiveTarget = context.target || this.targets[0];
-        if (this.isGem(orbA) || this.isGem(orbB)) {
-          return { type: "mixed", rgb: cloneColor(objectiveTarget.rgb), spoiled: false };
-        }
-        if (this.isWhite(orbA) && this.isSpoiled(orbB)) return this.purify();
-        if (this.isWhite(orbB) && this.isSpoiled(orbA)) return this.purify();
-        if (this.isSpoiled(orbA) || this.isSpoiled(orbB)) return this.makeOrb(this.void);
-        if (this.isWhite(orbA)) return this.tintWithWhite(orbB);
-        if (this.isWhite(orbB)) return this.tintWithWhite(orbA);
-        if (this.isMetallic(orbA)) return this.doubleEffect(orbB);
-        if (this.isMetallic(orbB)) return this.doubleEffect(orbA);
-
-        const cmyA = this.rgbToCmy(orbA.rgb);
-        const cmyB = this.rgbToCmy(orbB.rgb);
-        const mixedCmy = {
-          c: (cmyA.c + cmyB.c) / 2,
-          m: (cmyA.m + cmyB.m) / 2,
-          y: (cmyA.y + cmyB.y) / 2
-        };
-        const mixedRgb = this.cmyToRgb(mixedCmy);
-
-        if (this.isComplementaryMix(orbA.rgb, orbB.rgb)) {
-          return this.makeOrb(this.void);
-        }
-
-        return {
-          type: "mixed",
-          rgb: this.boostSaturation(mixedRgb),
-          spoiled: false
-        };
-      },
-
-      rgbToCmy(rgb) {
-        return {
-          c: 1 - rgb.r / 255,
-          m: 1 - rgb.g / 255,
-          y: 1 - rgb.b / 255
-        };
-      },
-
-      cmyToRgb(cmy) {
-        return {
-          r: Math.round((1 - cmy.c) * 255),
-          g: Math.round((1 - cmy.m) * 255),
-          b: Math.round((1 - cmy.y) * 255)
-        };
-      },
-
-      boostSaturation(rgb) {
-        const gray = (rgb.r + rgb.g + rgb.b) / 3;
-        return {
-          r: Math.round(clamp(gray + (rgb.r - gray) * 1.25, 0, 255)),
-          g: Math.round(clamp(gray + (rgb.g - gray) * 1.25, 0, 255)),
-          b: Math.round(clamp(gray + (rgb.b - gray) * 1.25, 0, 255))
-        };
-      },
-
-      tintWithWhite(orb) {
-        return {
-          type: "mixed",
-          rgb: {
-            r: Math.round((orb.rgb.r + 245) / 2),
-            g: Math.round((orb.rgb.g + 241) / 2),
-            b: Math.round((orb.rgb.b + 226) / 2)
-          },
-          spoiled: false
-        };
-      },
-
-      doubleEffect(orb) {
-        if (this.isSpoiled(orb)) return this.makeOrb(this.void);
-        const rgb = this.boostSaturation(orb.rgb);
-        return {
-          type: "mixed",
-          rgb: this.boostSaturation(rgb),
-          spoiled: false
-        };
-      },
-
-      purify() {
-        return this.makeOrb(this.white);
-      },
-
-      isWhite(orb) {
-        return orb && orb.type === "white";
-      },
-
-      isSpoiled(orb) {
-        return !!orb && (orb.spoiled || orb.type === "void");
-      },
-
-      isMetallic(orb) {
-        return !!orb && (orb.metallic || orb.type === "metallic");
-      },
-
-      isGem(orb) {
-        return !!orb && (orb.gem || orb.type === "gem");
-      },
-
-      isComplementaryMix(rgbA, rgbB) {
-        const hueA = this.rgbToHue(rgbA);
-        const hueB = this.rgbToHue(rgbB);
-        const diff = Math.abs(hueA - hueB);
-        const hueDistance = Math.min(diff, 360 - diff);
-        return hueDistance > 135 && hueDistance < 225;
-      },
-
-      rgbToHue(rgb) {
-        const r = rgb.r / 255;
-        const g = rgb.g / 255;
-        const b = rgb.b / 255;
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        const delta = max - min;
-        if (delta === 0) return 0;
-        let hue;
-        if (max === r) hue = 60 * (((g - b) / delta) % 6);
-        else if (max === g) hue = 60 * ((b - r) / delta + 2);
-        else hue = 60 * ((r - g) / delta + 4);
-        return hue < 0 ? hue + 360 : hue;
-      }
-    };
-
-    /******************************************************************
-     * LevelManager
-     *
-     * Reads objective config per level and evaluates completion/failure.
-     ******************************************************************/
-    class LevelManager {
-      constructor() {
-        this.levels = [
-          {
-            name: "First Brew",
-            moves: 24,
-            objective: { type: "singleTarget", target: ColorMixer.targets[0] }
-          },
-          {
-            name: "Tri-Chroma Trial",
-            moves: 28,
-            objective: {
-              type: "multiTarget",
-              targets: [ColorMixer.targets[0], ColorMixer.targets[1], ColorMixer.targets[2]]
-            }
-          },
-          {
-            name: "Clean Crucible",
-            moves: 23,
-            objective: {
-              type: "spoiledLimit",
-              target: ColorMixer.targets[1],
-              maxSpoiled: 5
-            }
-          },
-          {
-            name: "Swift Ember",
-            moves: 24,
-            objective: {
-              type: "underMoves",
-              target: ColorMixer.targets[2],
-              maxMovesUsed: 12
-            }
-          }
-        ];
-        this.active = null;
-        this.completedTargets = [];
+        this.ctx = new AudioContext();
+        this.startMusic();
       }
 
-      start(index, dailyConfig = null) {
-        this.active = dailyConfig || this.levels[index % this.levels.length];
-        this.completedTargets = [];
-        return this.active;
+      play(name) {
+        if (!this.enabled || !this.ctx) return;
+        const map = {
+          shoot: [620, 0.04, "sawtooth", 0.05],
+          hit: [180, 0.05, "square", 0.05],
+          death: [86, 0.15, "sawtooth", 0.1],
+          playerHit: [52, 0.22, "triangle", 0.12],
+          pickup: [880, 0.16, "sine", 0.07],
+          wave: [260, 0.35, "sine", 0.06],
+          nova: [120, 0.42, "sawtooth", 0.13]
+        };
+        const [freq, duration, type, gainValue] = map[name] || map.hit;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.85, now + duration);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(gainValue, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain).connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.04);
       }
 
-      primaryTarget() {
-        const objective = this.active.objective;
-        if (objective.target) return objective.target;
-        return objective.targets[this.completedTargets.length] || objective.targets[0];
-      }
-
-      targetLabel() {
-        const objective = this.active.objective;
-        if (objective.type === "multiTarget") {
-          return `${this.active.name}: ${this.completedTargets.length}/${objective.targets.length}`;
-        }
-        if (objective.type === "spoiledLimit") {
-          return `${this.active.name}: keep void <= ${objective.maxSpoiled}`;
-        }
-        if (objective.type === "underMoves") {
-          return `${this.active.name}: under ${objective.maxMovesUsed} moves`;
-        }
-        return `${this.active.name}: ${this.primaryTarget().name}`;
-      }
-
-      handlePour(orb, stats) {
-        const objective = this.active.objective;
-        if (objective.type === "multiTarget") {
-          for (let i = 0; i < objective.targets.length; i++) {
-            if (this.completedTargets.includes(i)) continue;
-            if (colorSimilarity(orb.rgb, objective.targets[i].rgb) >= TARGET_TOLERANCE && !ColorMixer.isSpoiled(orb)) {
-              this.completedTargets.push(i);
-              return {
-                matched: true,
-                complete: this.completedTargets.length === objective.targets.length,
-                text: `Matched ${objective.targets[i].name}. ${this.completedTargets.length}/${objective.targets.length} targets complete.`
-              };
-            }
-          }
-          return { matched: false, complete: false, text: "That orb does not match an active target." };
-        }
-
-        const target = objective.target;
-        const matched = colorSimilarity(orb.rgb, target.rgb) >= TARGET_TOLERANCE && !ColorMixer.isSpoiled(orb);
-        if (!matched) return { matched: false, complete: false, text: "That orb is outside target tolerance." };
-
-        if (objective.type === "spoiledLimit" && stats.spoiledCount > objective.maxSpoiled) {
-          return { matched: true, complete: false, failed: true, text: `Too many spoiled orbs: ${stats.spoiledCount}/${objective.maxSpoiled}.` };
-        }
-
-        if (objective.type === "underMoves" && stats.movesUsed > objective.maxMovesUsed) {
-          return { matched: true, complete: false, failed: true, text: `Too slow: ${stats.movesUsed}/${objective.maxMovesUsed} moves used.` };
-        }
-
-        return { matched: true, complete: true, text: "Target brewed." };
-      }
-
-      checkTurnFailure(stats) {
-        const objective = this.active.objective;
-        if (objective.type === "spoiledLimit" && stats.spoiledCount > objective.maxSpoiled) {
-          return `Spoiled orbs exceeded the limit: ${stats.spoiledCount}/${objective.maxSpoiled}.`;
-        }
-        return "";
+      startMusic() {
+        if (this.musicTimer || !this.ctx) return;
+        let step = 0;
+        const notes = [55, 82.4, 110, 164.8, 220, 164.8, 110, 82.4];
+        this.musicTimer = setInterval(() => {
+          if (!this.ctx || document.hidden) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = notes[step % notes.length];
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.028, now + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
+          osc.connect(gain).connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.7);
+          step++;
+        }, 480);
       }
     }
 
-    /******************************************************************
-     * GridManager
-     *
-     * Owns board state, cell coordinates, neighbor lookup, hit testing,
-     * orb replacement, and spoiled-orb spread.
-     ******************************************************************/
-    class GridManager {
-      constructor(size) {
-        this.size = size;
-        this.grid = [];
-        this.cellSize = 56;
-        this.originX = 0;
-        this.originY = 0;
-        this.random = Math.random;
-        this.upgrades = {};
-      }
+    class SceneSetup {
+      constructor(container) {
+        this.container = container;
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x030512, 0.026);
+        this.camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 260);
+        this.camera.position.set(0, 38, 42);
+        this.cameraTarget = new THREE.Vector3(0, 0, 0);
+        this.shake = 0;
 
-      configure(size, random = Math.random, upgrades = {}) {
-        this.size = size;
-        this.random = random;
-        this.upgrades = upgrades;
-      }
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.2;
+        container.appendChild(this.renderer.domElement);
 
-      reset() {
-        this.grid = [];
-        for (let row = 0; row < this.size; row++) {
-          const cells = [];
-          for (let col = 0; col < this.size; col++) {
-            cells.push(ColorMixer.createRandomOrb(this.random, this.upgrades, { row, col, reason: "initial" }));
-          }
-          this.grid.push(cells);
-        }
-      }
+        this.composer = new EffectComposer(this.renderer);
+        this.composer.addPass(new RenderPass(this.scene, this.camera));
+        this.bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.25, 0.55, 0.06);
+        this.composer.addPass(this.bloom);
 
-      setLayout(canvasWidth, canvasHeight) {
-        const boardSize = Math.min(canvasWidth, canvasHeight) * 0.78;
-        this.cellSize = boardSize / this.size;
-        this.originX = (canvasWidth - boardSize) / 2;
-        this.originY = (canvasHeight - boardSize) / 2 + 12;
-      }
-
-      getOrb(row, col) {
-        if (!this.isInside(row, col)) return null;
-        if (!this.grid[row]) return null;
-        return this.grid[row][col];
-      }
-
-      setOrb(row, col, orb) {
-        if (this.isInside(row, col)) this.grid[row][col] = orb;
-      }
-
-      replaceOrb(row, col) {
-        this.setOrb(row, col, ColorMixer.createRandomOrb(this.random, this.upgrades, { row, col, reason: "replacement" }));
-      }
-
-      isInside(row, col) {
-        return row >= 0 && row < this.size && col >= 0 && col < this.size;
-      }
-
-      areAdjacent(a, b) {
-        return Math.abs(a.row - b.row) + Math.abs(a.col - b.col) === 1;
-      }
-
-      getNeighbors(row, col) {
-        return [
-          { row: row - 1, col },
-          { row: row + 1, col },
-          { row, col: col - 1 },
-          { row, col: col + 1 }
-        ].filter(cell => this.isInside(cell.row, cell.col));
-      }
-
-      cellToCenter(row, col) {
-        return {
-          x: this.originX + col * this.cellSize + this.cellSize / 2,
-          y: this.originY + row * this.cellSize + this.cellSize / 2
-        };
-      }
-
-      pointToCell(x, y) {
-        const col = Math.floor((x - this.originX) / this.cellSize);
-        const row = Math.floor((y - this.originY) / this.cellSize);
-        if (!this.isInside(row, col)) return null;
-        return { row, col };
-      }
-
-      spreadSpoiledOrbs() {
-        const spreads = [];
-        for (let row = 0; row < this.size; row++) {
-          for (let col = 0; col < this.size; col++) {
-            const orb = this.getOrb(row, col);
-            if (!ColorMixer.isSpoiled(orb)) continue;
-
-            const choices = this.getNeighbors(row, col)
-              .filter(cell => {
-                const neighbor = this.getOrb(cell.row, cell.col);
-                return !ColorMixer.isSpoiled(neighbor) && !ColorMixer.isWhite(neighbor);
-              });
-
-            if (choices.length > 0) {
-              spreads.push(choices[Math.floor(this.random() * choices.length)]);
-            }
-          }
-        }
-
-        for (const cell of spreads) {
-          this.setOrb(cell.row, cell.col, ColorMixer.makeOrb(ColorMixer.void));
-        }
-      }
-
-      countSpoiled() {
-        let total = 0;
-        for (let row = 0; row < this.size; row++) {
-          for (let col = 0; col < this.size; col++) {
-            if (ColorMixer.isSpoiled(this.getOrb(row, col))) total++;
-          }
-        }
-        return total;
-      }
-
-      purifyAll() {
-        let total = 0;
-        for (let row = 0; row < this.size; row++) {
-          for (let col = 0; col < this.size; col++) {
-            if (ColorMixer.isSpoiled(this.getOrb(row, col))) {
-              this.setOrb(row, col, ColorMixer.makeOrb(ColorMixer.white));
-              total++;
-            }
-          }
-        }
-        return total;
-      }
-
-      findBestMatch(target) {
-        let best = null;
-        let score = -1;
-        for (let row = 0; row < this.size; row++) {
-          for (let col = 0; col < this.size; col++) {
-            const orb = this.getOrb(row, col);
-            const similarity = ColorMixer.isSpoiled(orb) ? 0 : colorSimilarity(orb.rgb, target.rgb);
-            if (similarity > score) {
-              score = similarity;
-              best = { row, col, score };
-            }
-          }
-        }
-        return best;
-      }
-    }
-
-    /******************************************************************
-     * ChainReactionEngine
-     *
-     * Finds neighboring orbs similar to the result color and absorbs
-     * them in expanding waves. Absorbed orbs are replaced with new ones.
-     ******************************************************************/
-    class ChainReactionEngine {
-      constructor(gridManager) {
-        this.grid = gridManager;
-      }
-
-      runFrom(origin, resultColor, multiplier = 1) {
-        const absorbed = [];
-        const visited = new Set([this.key(origin)]);
-        let frontier = [origin];
-        const maxDepth = 2 + multiplier;
-
-        for (let depth = 0; depth < maxDepth; depth++) {
-          const nextFrontier = [];
-          for (const cell of frontier) {
-            const neighbors = this.grid.getNeighbors(cell.row, cell.col);
-            for (const neighbor of neighbors) {
-              const key = this.key(neighbor);
-              if (visited.has(key)) continue;
-              visited.add(key);
-
-              const orb = this.grid.getOrb(neighbor.row, neighbor.col);
-              const similarEnough = colorSimilarity(resultColor, orb.rgb) > 0.82 - depth * 0.04;
-              if (!ColorMixer.isSpoiled(orb) && similarEnough) {
-                absorbed.push(neighbor);
-                nextFrontier.push(neighbor);
-              }
-            }
-          }
-          frontier = nextFrontier;
-          if (frontier.length === 0) break;
-        }
-
-        for (const cell of absorbed) {
-          this.grid.replaceOrb(cell.row, cell.col);
-        }
-
-        return absorbed;
-      }
-
-      key(cell) {
-        return `${cell.row},${cell.col}`;
-      }
-    }
-
-    /******************************************************************
-     * UIManager
-     *
-     * Owns all DOM HUD updates, lab screen, and end screens.
-     ******************************************************************/
-    class UIManager {
-      constructor() {
-        this.cauldron = document.getElementById("cauldron");
-        this.targetLabel = document.getElementById("targetLabel");
-        this.level = document.getElementById("level");
-        this.lives = document.getElementById("lives");
-        this.shards = document.getElementById("shards");
-        this.moves = document.getElementById("moves");
-        this.score = document.getElementById("score");
-        this.message = document.getElementById("message");
-        this.messageTitle = document.getElementById("messageTitle");
-        this.messageText = document.getElementById("messageText");
-        this.restartButton = document.getElementById("restartButton");
-        this.messageLabButton = document.getElementById("messageLabButton");
-        this.labButton = document.getElementById("labButton");
-        this.dailyButton = document.getElementById("dailyButton");
-        this.settingsButton = document.getElementById("settingsButton");
-        this.settingsScreen = document.getElementById("settingsScreen");
-        this.closeSettingsButton = document.getElementById("closeSettingsButton");
-        this.colorblindToggle = document.getElementById("colorblindToggle");
-        this.labScreen = document.getElementById("labScreen");
-        this.labSummary = document.getElementById("labSummary");
-        this.labCards = document.getElementById("labCards");
-        this.startLevelButton = document.getElementById("startLevelButton");
-        this.closeLabButton = document.getElementById("closeLabButton");
-        this.iapButton = document.getElementById("iapButton");
-        this.powerButtons = {
-          purifyAll: document.getElementById("purifyAllButton"),
-          extraMove: document.getElementById("extraMoveButton"),
-          colorReveal: document.getElementById("revealButton")
-        };
-      }
-
-      setTarget(label, target, displayColor = target.rgb) {
-        this.targetLabel.textContent = label;
-        this.cauldron.style.setProperty("--target-color", rgbToCss(target.rgb));
-        this.cauldron.style.setProperty("--liquid-color", rgbToCss(displayColor));
-      }
-
-      updateStats(model) {
-        this.level.textContent = model.level;
-        this.lives.textContent = model.lives;
-        this.shards.textContent = model.currency;
-        this.moves.textContent = model.moves;
-        this.score.textContent = model.score;
-      }
-
-      updatePowerButtons(powers) {
-        this.powerButtons.purifyAll.textContent = `Purify All (${powers.purifyAll})`;
-        this.powerButtons.extraMove.textContent = `Extra Move (${powers.extraMove})`;
-        this.powerButtons.colorReveal.textContent = `Color Reveal (${powers.colorReveal})`;
-        this.powerButtons.purifyAll.disabled = powers.purifyAll <= 0;
-        this.powerButtons.extraMove.disabled = powers.extraMove <= 0;
-        this.powerButtons.colorReveal.disabled = powers.colorReveal <= 0;
-      }
-
-      showScreen(title, text, canContinue = true) {
-        this.messageTitle.textContent = title;
-        this.messageText.textContent = text;
-        this.restartButton.textContent = canContinue ? "Continue" : "Retry";
-        this.message.classList.add("show");
-      }
-
-      hideScreen() {
-        this.message.classList.remove("show");
-      }
-
-      showLab(state, shopItems) {
-        const nextLifeMs = LivesManager.timeToNextLife(state);
-        const nextLife = nextLifeMs ? ` Next life in ${Math.ceil(nextLifeMs / 60000)} min.` : "";
-        this.labSummary.textContent = `Essence Shards: ${state.currency}. Lives: ${state.lives}/${MAX_LIVES}.${nextLife}`;
-        this.labCards.innerHTML = "";
-
-        for (const item of shopItems) {
-          const card = document.createElement("div");
-          card.className = "lab-card";
-          const owned = item.owned ? "Owned" : `${item.cost} shards`;
-          card.innerHTML = `
-            <h3>${item.name}</h3>
-            <p>${item.description}</p>
-            <button data-shop-id="${item.id}" ${item.disabled ? "disabled" : ""}>${owned}</button>
-          `;
-          this.labCards.appendChild(card);
-        }
-
-        this.labScreen.classList.add("show");
-      }
-
-      hideLab() {
-        this.labScreen.classList.remove("show");
-      }
-
-      showSettings(settings) {
-        this.colorblindToggle.checked = !!settings.colorblindMode;
-        this.settingsScreen.classList.add("show");
-      }
-
-      hideSettings() {
-        this.settingsScreen.classList.remove("show");
-      }
-    }
-
-    /******************************************************************
-     * Game
-     *
-     * Connects input, rendering, turn flow, progression, daily mode,
-     * win/loss checks, and the extension-friendly managers above.
-     ******************************************************************/
-    class Game {
-      constructor() {
-        this.canvas = document.getElementById("gameCanvas");
-        this.ctx = this.canvas.getContext("2d");
-        this.state = SaveManager.load();
-        LivesManager.applyRegen(this.state);
-        this.levelManager = new LevelManager();
-        this.grid = new GridManager(this.state.upgrades.gridSize);
-        this.chainReactions = new ChainReactionEngine(this.grid);
-        this.ui = new UIManager();
-        this.target = ColorMixer.targets[0];
-        this.moves = STARTING_MOVES;
-        this.movesUsed = 0;
-        this.score = 0;
-        this.selectedCell = null;
-        this.revealedCell = null;
-        this.gameOver = false;
-        this.dailyMode = false;
-        this.random = Math.random;
-        this.birthTimes = new Map();
-        this.trails = [];
-        this.flashes = [];
-        this.shockwaves = [];
-        this.sparkles = [];
-        this.ambientMotes = [];
-        this.bestMatchColor = null;
-        this.lastFrameTime = performance.now();
-        this.animationTime = 0;
-
-        AudioManager.init();
-        this.bindEvents();
-        this.resize();
-        this.seedAmbientMotes();
-        this.openLab();
-        this.save();
-        requestAnimationFrame(time => this.frame(time));
-      }
-
-      bindEvents() {
+        this.buildWorld();
         window.addEventListener("resize", () => this.resize());
-        this.canvas.addEventListener("pointerdown", event => this.handlePointerDown(event));
-        this.canvas.addEventListener("pointerup", event => this.handlePointerUp(event));
-        this.ui.restartButton.addEventListener("click", () => this.continueFromMessage());
-        this.ui.messageLabButton.addEventListener("click", () => this.openLab());
-        this.ui.labButton.addEventListener("click", () => this.openLab());
-        this.ui.settingsButton.addEventListener("click", () => this.openSettings());
-        this.ui.closeSettingsButton.addEventListener("click", () => this.ui.hideSettings());
-        this.ui.colorblindToggle.addEventListener("change", () => {
-          this.state.settings.colorblindMode = this.ui.colorblindToggle.checked;
-          this.save();
-          this.draw();
+      }
+
+      buildWorld() {
+        this.scene.background = new THREE.Color(0x02030a);
+        this.scene.add(new THREE.HemisphereLight(0x132346, 0x020206, 0.9));
+
+        const floorGeo = new THREE.PlaneGeometry(ARENA, ARENA, 32, 32);
+        const floorMat = new THREE.MeshStandardMaterial({
+          color: 0x030612,
+          emissive: 0x07142a,
+          emissiveIntensity: 0.36,
+          roughness: 0.42,
+          metalness: 0.15
         });
-        this.ui.closeLabButton.addEventListener("click", () => this.ui.hideLab());
-        this.ui.startLevelButton.addEventListener("click", () => this.startLevel(false));
-        this.ui.dailyButton.addEventListener("click", () => this.startDailyChallenge());
-        this.ui.iapButton.addEventListener("click", () => MonetizationManager.triggerIAPOffer("essence_shards_small"));
-        this.ui.labCards.addEventListener("click", event => {
-          const button = event.target.closest("button[data-shop-id]");
-          if (button) this.buyLabItem(button.dataset.shopId);
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        this.scene.add(floor);
+
+        const grid = new THREE.GridHelper(ARENA, 40, 0x35f7ff, 0x5722ff);
+        grid.material.transparent = true;
+        grid.material.opacity = 0.56;
+        grid.position.y = 0.03;
+        this.scene.add(grid);
+
+        const ringGroup = new THREE.Group();
+        for (let i = 0; i < 4; i++) {
+          const ring = new THREE.Mesh(
+            new THREE.RingGeometry(10 + i * 7, 10.08 + i * 7, 160),
+            new THREE.MeshBasicMaterial({
+              color: i % 2 ? 0xff2cfb : 0x35f7ff,
+              transparent: true,
+              opacity: 0.13,
+              side: THREE.DoubleSide
+            })
+          );
+          ring.rotation.x = -Math.PI / 2;
+          ring.position.y = 0.08 + i * 0.006;
+          ringGroup.add(ring);
+        }
+        this.scene.add(ringGroup);
+
+        const borderMat = new THREE.MeshBasicMaterial({ color: 0xff2cfb, transparent: true, opacity: 0.75 });
+        const borderGeo = new THREE.BoxGeometry(ARENA, 0.5, 0.25);
+        [[0, HALF_ARENA], [0, -HALF_ARENA]].forEach(([x, z]) => {
+          const wall = new THREE.Mesh(borderGeo, borderMat);
+          wall.position.set(x, 0.35, z);
+          this.scene.add(wall);
         });
-        this.ui.powerButtons.purifyAll.addEventListener("click", () => this.usePower("purifyAll"));
-        this.ui.powerButtons.extraMove.addEventListener("click", () => this.usePower("extraMove"));
-        this.ui.powerButtons.colorReveal.addEventListener("click", () => this.usePower("colorReveal"));
+        [[HALF_ARENA, 0], [-HALF_ARENA, 0]].forEach(([x, z]) => {
+          const wall = new THREE.Mesh(borderGeo, borderMat);
+          wall.rotation.y = Math.PI / 2;
+          wall.position.set(x, 0.35, z);
+          this.scene.add(wall);
+        });
+
+        const starGeo = new THREE.BufferGeometry();
+        const stars = [];
+        for (let i = 0; i < 900; i++) {
+          stars.push(rand(-120, 120), rand(18, 110), rand(-150, 90));
+        }
+        starGeo.setAttribute("position", new THREE.Float32BufferAttribute(stars, 3));
+        const starMat = new THREE.PointsMaterial({
+          color: 0xb8fbff,
+          size: 0.22,
+          transparent: true,
+          opacity: 0.75,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        });
+        this.stars = new THREE.Points(starGeo, starMat);
+        this.scene.add(this.stars);
+
+        this.keyLights = [
+          new THREE.PointLight(0x35f7ff, 4.2, 48),
+          new THREE.PointLight(0xff2cfb, 3.6, 52),
+          new THREE.PointLight(0x7d4cff, 2.5, 60)
+        ];
+        this.keyLights[0].position.set(-22, 13, -18);
+        this.keyLights[1].position.set(24, 12, 20);
+        this.keyLights[2].position.set(0, 18, 0);
+        this.keyLights.forEach(light => this.scene.add(light));
+      }
+
+      update(dt, playerPos) {
+        this.stars.rotation.y += dt * 0.006;
+        const desiredTarget = tmpVec.set(playerPos.x * 0.32, 0, playerPos.z * 0.32);
+        this.cameraTarget.lerp(desiredTarget, 1 - Math.pow(0.001, dt));
+        const shakeAmount = this.shake;
+        this.shake = Math.max(0, this.shake - dt * 7);
+        const jitter = shakeAmount > 0 ? tmpVec2.set(rand(-shakeAmount, shakeAmount), rand(-shakeAmount, shakeAmount), rand(-shakeAmount, shakeAmount)) : tmpVec2.set(0, 0, 0);
+        const desiredCamera = tmpVec.set(
+          this.cameraTarget.x * 0.65,
+          40 + Math.abs(playerPos.z) * 0.04,
+          43 + this.cameraTarget.z * 0.18
+        ).add(jitter);
+        this.camera.position.lerp(desiredCamera, 1 - Math.pow(0.00003, dt));
+        this.camera.lookAt(this.cameraTarget.x, 0, this.cameraTarget.z);
+      }
+
+      addShake(amount) {
+        this.shake = Math.min(1.35, this.shake + amount);
       }
 
       resize() {
-        const rect = this.canvas.parentElement.getBoundingClientRect();
-        const dpr = Math.max(1, window.devicePixelRatio || 1);
-        this.canvas.width = Math.floor(rect.width * dpr);
-        this.canvas.height = Math.floor(rect.height * dpr);
-        this.canvas.style.width = `${rect.width}px`;
-        this.canvas.style.height = `${rect.height}px`;
-        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        this.grid.setLayout(rect.width, rect.height);
-        this.seedAmbientMotes();
-        this.draw();
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+        this.composer.setSize(width, height);
+        this.bloom.setSize(width, height);
       }
 
-      startLevel(isDaily) {
-        LivesManager.applyRegen(this.state);
-        if (!isDaily && !LivesManager.consume(this.state)) {
-          this.ui.showScreen("No Lives", "Energy is empty. Wait for regeneration or use a future rewarded-ad refill.", false);
-          this.save();
-          return;
-        }
+      render() {
+        this.composer.render();
+      }
+    }
 
-        this.dailyMode = isDaily;
-        this.random = isDaily ? createSeededRandom(hashString(todayKey())) : Math.random;
-        const dailyConfig = isDaily ? this.createDailyLevel() : null;
-        const levelConfig = this.levelManager.start(this.state.currentLevel, dailyConfig);
-        this.moves = levelConfig.moves;
-        this.movesUsed = 0;
-        this.score = 0;
-        this.selectedCell = null;
-        this.revealedCell = null;
-        this.gameOver = false;
-
-        this.grid.configure(this.state.upgrades.gridSize, this.random, this.state.upgrades);
-        this.grid.reset();
-        this.markAllOrbsBorn();
-        this.grid.setLayout(this.canvas.clientWidth, this.canvas.clientHeight);
-        this.target = this.levelManager.primaryTarget();
-        this.ui.hideScreen();
-        this.ui.hideLab();
-        this.ui.hideSettings();
-        this.refreshHud();
-        this.save();
-        this.draw();
+    class ParticleSystem {
+      constructor(scene) {
+        this.scene = scene;
+        this.particles = [];
+        this.trails = [];
+        this.flashes = [];
       }
 
-      createDailyLevel() {
-        const random = createSeededRandom(hashString(`daily-level-${todayKey()}`));
-        const targets = [...ColorMixer.targets].sort(() => random() - 0.5).slice(0, 3);
-        return {
-          name: `Daily ${todayKey()}`,
-          moves: 26,
-          objective: { type: "multiTarget", targets }
-        };
-      }
-
-      startDailyChallenge() {
-        if (this.state.settings.dailyDate === todayKey() && this.state.settings.completedDaily) {
-          this.ui.showScreen("Daily Complete", "Today's seeded challenge is already complete. Come back tomorrow.", true);
-          return;
-        }
-        this.startLevel(true);
-      }
-
-      continueFromMessage() {
-        if (this.gameOver) this.openLab();
-        else this.startLevel(false);
-      }
-
-      canvasPoint(event) {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top
-        };
-      }
-
-      handlePointerDown(event) {
-        if (this.gameOver || this.ui.labScreen.classList.contains("show") || this.ui.settingsScreen.classList.contains("show")) return;
-        const point = this.canvasPoint(event);
-        this.selectedCell = this.grid.pointToCell(point.x, point.y);
-        this.draw();
-      }
-
-      handlePointerUp(event) {
-        if (this.gameOver || !this.selectedCell || this.ui.labScreen.classList.contains("show") || this.ui.settingsScreen.classList.contains("show")) return;
-        const point = this.canvasPoint(event);
-        const targetCell = this.grid.pointToCell(point.x, point.y);
-        const sourceCell = this.selectedCell;
-        this.selectedCell = null;
-
-        if (!targetCell) {
-          this.draw();
-          return;
-        }
-
-        const sameCell = sourceCell.row === targetCell.row && sourceCell.col === targetCell.col;
-        if (sameCell) {
-          this.tryPourOrb(targetCell);
-        } else if (this.grid.areAdjacent(sourceCell, targetCell)) {
-          this.mixCells(sourceCell, targetCell);
-        }
-
-        this.draw();
-      }
-
-      mixCells(sourceCell, targetCell) {
-        if (this.moves <= 0) return;
-
-        const sourceOrb = this.grid.getOrb(sourceCell.row, sourceCell.col);
-        const targetOrb = this.grid.getOrb(targetCell.row, targetCell.col);
-        const sourceCenter = this.grid.cellToCenter(sourceCell.row, sourceCell.col);
-        const targetCenter = this.grid.cellToCenter(targetCell.row, targetCell.col);
-        const multiplier = ColorMixer.isMetallic(sourceOrb) || ColorMixer.isMetallic(targetOrb) ? 2 : 1;
-        const result = ColorMixer.mix(sourceOrb, targetOrb, { target: this.levelManager.primaryTarget() });
-        const wasPurify = (ColorMixer.isWhite(sourceOrb) && ColorMixer.isSpoiled(targetOrb)) || (ColorMixer.isWhite(targetOrb) && ColorMixer.isSpoiled(sourceOrb));
-        const wasSpoil = ColorMixer.isSpoiled(result);
-
-        this.grid.setOrb(targetCell.row, targetCell.col, result);
-        this.grid.replaceOrb(sourceCell.row, sourceCell.col);
-        this.birthTimes.set(this.cellKey(targetCell), performance.now());
-        this.birthTimes.set(this.cellKey(sourceCell), performance.now());
-
-        const absorbed = this.chainReactions.runFrom(targetCell, result.rgb, multiplier);
-        for (const cell of absorbed) this.birthTimes.set(this.cellKey(cell), performance.now() + 60);
-        this.bestMatchColor = cloneColor(result.rgb);
-        this.addMixEffects(sourceCenter, targetCenter, sourceOrb.rgb, targetOrb.rgb, result.rgb);
-        this.scheduleChainEffects(targetCell, absorbed, result.rgb);
-        AudioManager.play(wasPurify ? "purify" : wasSpoil ? "spoil" : "mix");
-        if (absorbed.length) AudioManager.play("chain");
-        if (absorbed.length >= 3 || multiplier > 1) AudioManager.play("resonance");
-        FeedbackManager.vibrate(absorbed.length >= 3 ? [25, 35, 45] : 18);
-        this.score += (10 + absorbed.length * 25) * multiplier;
-        this.moves -= 1;
-        this.movesUsed += 1;
-
-        this.grid.spreadSpoiledOrbs();
-        this.revealedCell = null;
-
-        const failure = this.levelManager.checkTurnFailure(this.currentStats());
-        if (failure) {
-          this.endGame(false, failure);
-          return;
-        }
-
-        this.refreshHud();
-        this.save();
-
-        if (this.moves <= 0) {
-          this.endGame(false, "The cauldron cooled before the objective was complete.");
-        }
-      }
-
-      tryPourOrb(cell) {
-        const orb = this.grid.getOrb(cell.row, cell.col);
-        const result = this.levelManager.handlePour(orb, this.currentStats());
-
-        if (!result.matched) return;
-        this.score += result.complete ? 100 : 40;
-
-        if (result.failed) {
-          this.endGame(false, result.text);
-        } else if (result.complete) {
-          this.endGame(true, result.text);
-        } else {
-          this.target = this.levelManager.primaryTarget();
-          this.refreshHud();
-          this.save();
-        }
-      }
-
-      currentStats() {
-        return {
-          movesUsed: this.movesUsed,
-          spoiledCount: this.grid.countSpoiled()
-        };
-      }
-
-      usePower(powerId) {
-        if (this.gameOver || this.state.upgrades.powers[powerId] <= 0) return;
-        this.state.upgrades.powers[powerId] -= 1;
-
-        if (powerId === "purifyAll") {
-          this.score += this.grid.purifyAll() * 5;
-          AudioManager.play("purify");
-          FeedbackManager.vibrate([20, 30, 20]);
-        } else if (powerId === "extraMove") {
-          this.moves += 3;
-        } else if (powerId === "colorReveal") {
-          this.revealedCell = this.grid.findBestMatch(this.levelManager.primaryTarget());
-        }
-
-        this.refreshHud();
-        this.save();
-        this.draw();
-      }
-
-      endGame(won, detail) {
-        this.gameOver = true;
-        if (won) {
-          AudioManager.play("complete");
-          FeedbackManager.vibrate([35, 35, 70]);
-          const reward = this.dailyMode ? 55 : 30 + Math.max(0, this.moves) * 2;
-          this.state.currency += reward;
-          if (this.dailyMode) {
-            this.state.settings.dailyDate = todayKey();
-            this.state.settings.completedDaily = true;
-          } else {
-            this.state.currentLevel += 1;
-            this.state.interstitialCount += 1;
-            MonetizationManager.showInterstitial(this.state);
-          }
-          this.refreshHud();
-          this.save();
-          this.ui.showScreen("Level Complete", `${detail} Earned ${reward} Essence Shards. Score: ${this.score}.`, true);
-        } else {
-          this.refreshHud();
-          this.save();
-          this.ui.showScreen("Out of Moves", `${detail} Final score: ${this.score}.`, false);
-        }
-      }
-
-      openLab() {
-        LivesManager.applyRegen(this.state);
-        this.ui.hideScreen();
-        this.ui.hideSettings();
-        this.ui.showLab(this.state, this.shopItems());
-        this.refreshHud();
-        this.save();
-      }
-
-      openSettings() {
-        this.ui.hideLab();
-        this.ui.showSettings(this.state.settings);
-      }
-
-      shopItems() {
-        const upgrades = this.state.upgrades;
-        return [
-          {
-            id: "gridSize",
-            name: `Bigger Grid (${upgrades.gridSize}x${upgrades.gridSize})`,
-            description: "Increase the board by one row and column, up to 9x9.",
-            cost: 80,
-            owned: upgrades.gridSize >= 9,
-            disabled: upgrades.gridSize >= 9 || this.state.currency < 80
-          },
-          {
-            id: "metallicUnlocked",
-            name: "Metallic Orbs",
-            description: "Unlock rare metallic essences that double score and cascade depth.",
-            cost: 70,
-            owned: upgrades.metallicUnlocked,
-            disabled: upgrades.metallicUnlocked || this.state.currency < 70
-          },
-          {
-            id: "gemUnlocked",
-            name: "Gem Wildcards",
-            description: "Unlock rare one-time wildcards that mix directly toward the current target.",
-            cost: 90,
-            owned: upgrades.gemUnlocked,
-            disabled: upgrades.gemUnlocked || this.state.currency < 90
-          },
-          {
-            id: "purifyAll",
-            name: "Purify All",
-            description: "Active power-up: convert every spoiled void orb into purifier white.",
-            cost: 35,
-            owned: false,
-            disabled: this.state.currency < 35
-          },
-          {
-            id: "extraMove",
-            name: "Extra Move",
-            description: "Active power-up: add 3 moves to the current level.",
-            cost: 25,
-            owned: false,
-            disabled: this.state.currency < 25
-          },
-          {
-            id: "colorReveal",
-            name: "Color Reveal",
-            description: "Active power-up: highlight the orb closest to the current target.",
-            cost: 20,
-            owned: false,
-            disabled: this.state.currency < 20
-          }
-        ];
-      }
-
-      buyLabItem(id) {
-        const item = this.shopItems().find(entry => entry.id === id);
-        if (!item || item.disabled || item.owned) return;
-
-        this.state.currency -= item.cost;
-        if (id === "gridSize") this.state.upgrades.gridSize += 1;
-        else if (id === "metallicUnlocked") this.state.upgrades.metallicUnlocked = true;
-        else if (id === "gemUnlocked") this.state.upgrades.gemUnlocked = true;
-        else this.state.upgrades.powers[id] += 1;
-
-        this.openLab();
-      }
-
-      refreshHud() {
-        LivesManager.applyRegen(this.state);
-        this.target = this.levelManager.active ? this.levelManager.primaryTarget() : ColorMixer.targets[0];
-        const label = this.levelManager.active ? this.levelManager.targetLabel() : "Alchemist's Lab";
-        const liquidColor = this.bestMatchColor ? this.blendColor(this.target.rgb, this.bestMatchColor, 0.45) : this.target.rgb;
-        this.ui.setTarget(label, this.target, liquidColor);
-        this.ui.updateStats({
-          level: this.dailyMode ? "Daily" : this.state.currentLevel + 1,
-          lives: `${this.state.lives}/${MAX_LIVES}`,
-          currency: this.state.currency,
-          moves: this.moves,
-          score: this.score
-        });
-        this.ui.updatePowerButtons(this.state.upgrades.powers);
-      }
-
-      save() {
-        SaveManager.save(this.state);
-      }
-
-      cellKey(cell) {
-        return `${cell.row},${cell.col}`;
-      }
-
-      markAllOrbsBorn() {
-        const now = performance.now();
-        this.birthTimes.clear();
-        for (let row = 0; row < this.grid.size; row++) {
-          for (let col = 0; col < this.grid.size; col++) {
-            this.birthTimes.set(`${row},${col}`, now + (row + col) * 18);
-          }
-        }
-      }
-
-      blendColor(a, b, amount) {
-        return {
-          r: Math.round(a.r + (b.r - a.r) * amount),
-          g: Math.round(a.g + (b.g - a.g) * amount),
-          b: Math.round(a.b + (b.b - a.b) * amount)
-        };
-      }
-
-      addMixEffects(sourceCenter, targetCenter, sourceColor, targetColor, resultColor) {
-        this.trails.push({
-          from: sourceCenter,
-          to: targetCenter,
-          sourceColor: cloneColor(sourceColor),
-          targetColor: cloneColor(targetColor),
-          start: performance.now(),
-          duration: 420
-        });
-        this.flashes.push({
-          x: targetCenter.x,
-          y: targetCenter.y,
-          color: cloneColor(resultColor),
-          start: performance.now(),
-          duration: 520,
-          radius: this.grid.cellSize * 1.45
-        });
-        this.addSparkles(targetCenter.x, targetCenter.y, resultColor, 18, 1.5);
-      }
-
-      scheduleChainEffects(origin, absorbed, color) {
-        const originCenter = this.grid.cellToCenter(origin.row, origin.col);
-        this.shockwaves.push({
-          x: originCenter.x,
-          y: originCenter.y,
-          color: cloneColor(color),
-          start: performance.now(),
-          duration: 760,
-          radius: this.grid.cellSize * (2.2 + absorbed.length * 0.14)
-        });
-
-        absorbed.forEach((cell, index) => {
-          const center = this.grid.cellToCenter(cell.row, cell.col);
-          const delay = 50 + index * 70;
-          this.flashes.push({
-            x: center.x,
-            y: center.y,
-            color: cloneColor(color),
-            start: performance.now() + delay,
-            duration: 340,
-            radius: this.grid.cellSize * 1.05
-          });
-          this.trails.push({
-            from: center,
-            to: originCenter,
-            sourceColor: cloneColor(color),
-            targetColor: cloneColor(color),
-            start: performance.now() + delay,
-            duration: 360
-          });
+      createSprite(color, size = 1) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext("2d");
+        const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gradient.addColorStop(0, "rgba(255,255,255,1)");
+        gradient.addColorStop(0.28, `#${color.toString(16).padStart(6, "0")}`);
+        gradient.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 64, 64);
+        const texture = new THREE.CanvasTexture(canvas);
+        return new THREE.SpriteMaterial({
+          map: texture,
+          color,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          opacity: 1
         });
       }
 
-      addSparkles(x, y, color, count, speed) {
+      burst(position, color, count = 90, power = 1) {
+        const material = this.createSprite(color, 1);
         for (let i = 0; i < count; i++) {
-          const angle = this.random() * Math.PI * 2;
-          const velocity = (0.45 + this.random() * 1.25) * speed;
-          this.sparkles.push({
-            x,
-            y,
-            vx: Math.cos(angle) * velocity,
-            vy: Math.sin(angle) * velocity,
-            color: cloneColor(color),
-            start: performance.now(),
-            duration: 450 + this.random() * 300,
-            size: 1.2 + this.random() * 2.4
+          const sprite = new THREE.Sprite(material.clone());
+          const dir = new THREE.Vector3(rand(-1, 1), rand(0.1, 1.45), rand(-1, 1)).normalize();
+          sprite.position.copy(position);
+          sprite.scale.setScalar(rand(0.22, 0.72) * power);
+          this.scene.add(sprite);
+          this.particles.push({
+            sprite,
+            velocity: dir.multiplyScalar(rand(7, 23) * power),
+            life: rand(0.45, 0.9),
+            maxLife: 0,
+            gravity: rand(5, 12)
           });
+          this.particles[this.particles.length - 1].maxLife = this.particles[this.particles.length - 1].life;
         }
       }
 
-      seedAmbientMotes() {
-        const width = this.canvas.clientWidth || 1;
-        const height = this.canvas.clientHeight || 1;
-        this.ambientMotes = [];
-        for (let i = 0; i < 90; i++) {
-          const layer = i % 2;
-          this.ambientMotes.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            layer,
-            size: 0.7 + Math.random() * (layer ? 2.2 : 1.4),
-            speed: layer ? 0.22 : 0.09,
-            alpha: layer ? 0.34 : 0.2
-          });
-        }
-      }
-
-      frame(time) {
-        const dt = Math.min(50, time - this.lastFrameTime);
-        this.lastFrameTime = time;
-        this.animationTime = time;
-        this.updateEffects(dt, time);
-        this.draw();
-        requestAnimationFrame(nextTime => this.frame(nextTime));
-      }
-
-      updateEffects(dt, time) {
-        const width = this.canvas.clientWidth || 1;
-        const height = this.canvas.clientHeight || 1;
-        for (const mote of this.ambientMotes) {
-          mote.y -= mote.speed * dt * 0.06;
-          mote.x += Math.sin(time * 0.0003 + mote.y * 0.02) * mote.speed * 0.22;
-          if (mote.y < -10) {
-            mote.y = height + 10;
-            mote.x = Math.random() * width;
-          }
-        }
-
-        for (const sparkle of this.sparkles) {
-          sparkle.x += sparkle.vx * dt * 0.06;
-          sparkle.y += sparkle.vy * dt * 0.06;
-          sparkle.vx *= 0.985;
-          sparkle.vy *= 0.985;
-        }
-
-        this.trails = this.trails.filter(effect => time < effect.start + effect.duration);
-        this.flashes = this.flashes.filter(effect => time < effect.start + effect.duration);
-        this.shockwaves = this.shockwaves.filter(effect => time < effect.start + effect.duration);
-        this.sparkles = this.sparkles.filter(effect => time < effect.start + effect.duration);
-      }
-
-      draw() {
-        const ctx = this.ctx;
-        const width = this.canvas.clientWidth;
-        const height = this.canvas.clientHeight;
-
-        ctx.clearRect(0, 0, width, height);
-        this.drawBackground(ctx, width, height);
-        this.drawEffects(ctx, "under");
-        this.drawGrid(ctx);
-        this.drawEffects(ctx, "over");
-        this.drawHint(ctx, width, height);
-      }
-
-      drawBackground(ctx, width, height) {
-        const gradient = ctx.createRadialGradient(width * 0.5, height * 0.3, 20, width * 0.5, height * 0.45, Math.max(width, height) * 0.8);
-        gradient.addColorStop(0, "#202448");
-        gradient.addColorStop(0.5, "#11162a");
-        gradient.addColorStop(1, "#070912");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
-
-        ctx.save();
-        ctx.globalCompositeOperation = "screen";
-        for (const mote of this.ambientMotes) {
-          const twinkle = 0.65 + Math.sin(this.animationTime * 0.0015 + mote.x * 0.04) * 0.35;
-          ctx.fillStyle = mote.layer
-            ? `rgba(255, 214, 128, ${mote.alpha * twinkle})`
-            : `rgba(126, 162, 255, ${mote.alpha * twinkle})`;
-          ctx.beginPath();
-          ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      drawGrid(ctx) {
-        for (let row = 0; row < this.grid.size; row++) {
-          for (let col = 0; col < this.grid.size; col++) {
-            const orb = this.grid.getOrb(row, col);
-            if (!orb) continue;
-            const center = this.grid.cellToCenter(row, col);
-            const radius = this.grid.cellSize * 0.34;
-
-            ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
-            ctx.strokeStyle = "rgba(220, 184, 103, 0.25)";
-            ctx.lineWidth = 1;
-            ctx.fillRect(
-              center.x - this.grid.cellSize / 2 + 3,
-              center.y - this.grid.cellSize / 2 + 3,
-              this.grid.cellSize - 6,
-              this.grid.cellSize - 6
-            );
-            ctx.strokeRect(
-              center.x - this.grid.cellSize / 2 + 3,
-              center.y - this.grid.cellSize / 2 + 3,
-              this.grid.cellSize - 6,
-              this.grid.cellSize - 6
-            );
-
-            if (
-              this.selectedCell &&
-              this.selectedCell.row === row &&
-              this.selectedCell.col === col
-            ) {
-              ctx.strokeStyle = "#ffd978";
-              ctx.lineWidth = 3;
-              ctx.strokeRect(
-                center.x - this.grid.cellSize / 2 + 5,
-                center.y - this.grid.cellSize / 2 + 5,
-                this.grid.cellSize - 10,
-                this.grid.cellSize - 10
-              );
-            }
-
-            if (
-              this.revealedCell &&
-              this.revealedCell.row === row &&
-              this.revealedCell.col === col
-            ) {
-              ctx.strokeStyle = "#59f3d0";
-              ctx.lineWidth = 4;
-              ctx.strokeRect(
-                center.x - this.grid.cellSize / 2 + 8,
-                center.y - this.grid.cellSize / 2 + 8,
-                this.grid.cellSize - 16,
-                this.grid.cellSize - 16
-              );
-            }
-
-            this.drawOrb(ctx, orb, center, radius, row, col);
-          }
-        }
-      }
-
-      drawOrb(ctx, orb, center, radius, row, col) {
-        const bornAt = this.birthTimes.get(`${row},${col}`) || 0;
-        const age = clamp((this.animationTime - bornAt) / 520, 0, 1);
-        const bounce = age < 1 ? this.easeOutBack(age) : 1;
-        const pulse = 1 + Math.sin(this.animationTime * 0.003 + row * 0.8 + col * 0.45) * 0.045;
-        const drawRadius = radius * bounce * pulse;
-        const rgb = normalizeRgb(orb.rgb);
-        const glow = ColorMixer.isSpoiled(orb) ? "rgba(110, 100, 132, 0.45)" : `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.52)`;
-
-        ctx.save();
-        ctx.shadowColor = glow;
-        ctx.shadowBlur = ColorMixer.isSpoiled(orb) ? 16 : 24;
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, drawRadius * 1.12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        const gradient = ctx.createRadialGradient(
-          center.x - drawRadius * 0.35,
-          center.y - drawRadius * 0.42,
-          drawRadius * 0.08,
-          center.x,
-          center.y,
-          drawRadius * 1.08
+      flash(position, color, radius = 8, duration = 0.22) {
+        const light = new THREE.PointLight(color, 9, radius * 3);
+        light.position.copy(position);
+        light.position.y += 2.2;
+        this.scene.add(light);
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.2, 0.35, 80),
+          new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })
         );
-        const light = this.lighten(rgb, ColorMixer.isSpoiled(orb) ? 0.18 : 0.42);
-        const dark = this.darken(rgb, ColorMixer.isSpoiled(orb) ? 0.55 : 0.34);
-        gradient.addColorStop(0, rgbToCss(light));
-        gradient.addColorStop(0.42, rgbToCss(rgb));
-        gradient.addColorStop(1, rgbToCss(dark));
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, drawRadius, 0, Math.PI * 2);
-        ctx.fill();
+        ring.position.copy(position);
+        ring.position.y = 0.18;
+        ring.rotation.x = -Math.PI / 2;
+        this.scene.add(ring);
+        this.flashes.push({ light, ring, age: 0, duration, radius });
+      }
 
-        ctx.globalCompositeOperation = "screen";
-        const shine = ctx.createRadialGradient(
-          center.x - drawRadius * 0.34,
-          center.y - drawRadius * 0.38,
-          0,
-          center.x - drawRadius * 0.34,
-          center.y - drawRadius * 0.38,
-          drawRadius * 0.56
+      trail(position, color, size = 0.75, life = 0.32) {
+        const mat = this.createSprite(color);
+        const sprite = new THREE.Sprite(mat);
+        sprite.position.copy(position);
+        sprite.scale.setScalar(size);
+        this.scene.add(sprite);
+        this.trails.push({ sprite, age: 0, life, base: size });
+      }
+
+      update(dt) {
+        this.particles = this.particles.filter(p => {
+          p.life -= dt;
+          p.velocity.y -= p.gravity * dt;
+          p.sprite.position.addScaledVector(p.velocity, dt);
+          const t = clamp(p.life / p.maxLife, 0, 1);
+          p.sprite.material.opacity = t;
+          p.sprite.scale.multiplyScalar(1 + dt * 1.2);
+          if (p.life <= 0) {
+            this.scene.remove(p.sprite);
+            p.sprite.material.dispose();
+            return false;
+          }
+          return true;
+        });
+
+        this.trails = this.trails.filter(t => {
+          t.age += dt;
+          const n = clamp(t.age / t.life, 0, 1);
+          t.sprite.material.opacity = 1 - n;
+          t.sprite.scale.setScalar(t.base * (1 + n * 2.2));
+          if (n >= 1) {
+            this.scene.remove(t.sprite);
+            t.sprite.material.dispose();
+            return false;
+          }
+          return true;
+        });
+
+        this.flashes = this.flashes.filter(f => {
+          f.age += dt;
+          const n = clamp(f.age / f.duration, 0, 1);
+          f.light.intensity = 9 * (1 - n);
+          f.ring.scale.setScalar(1 + n * f.radius);
+          f.ring.material.opacity = 0.85 * (1 - n);
+          if (n >= 1) {
+            this.scene.remove(f.light, f.ring);
+            f.ring.geometry.dispose();
+            f.ring.material.dispose();
+            return false;
+          }
+          return true;
+        });
+      }
+    }
+
+    class PlayerController {
+      constructor(scene, particles, audio) {
+        this.scene = scene;
+        this.particles = particles;
+        this.audio = audio;
+        this.position = new THREE.Vector3(0, 1, 0);
+        this.velocity = new THREE.Vector3();
+        this.aimPoint = new THREE.Vector3(0, 0, -10);
+        this.projectiles = [];
+        this.keys = new Set();
+        this.health = 100;
+        this.maxHealth = 100;
+        this.radius = 1.3;
+        this.speed = 18;
+        this.cooldown = 0;
+        this.fireRate = 0.18;
+        this.rapidTimer = 0;
+        this.shieldTimer = 0;
+        this.powerCharge = 0;
+        this.pointer = new THREE.Vector2(0, 0);
+        this.raycaster = new THREE.Raycaster();
+        this.touchMove = new THREE.Vector2();
+        this.hasTouchMove = false;
+        this.buildMesh();
+        this.bindInput();
+      }
+
+      buildMesh() {
+        this.group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0x9ffcff,
+          emissive: 0x35f7ff,
+          emissiveIntensity: 2.8,
+          roughness: 0.18,
+          metalness: 0.28
+        });
+        this.core = new THREE.Mesh(new THREE.SphereGeometry(1.15, 48, 32), mat);
+        this.group.add(this.core);
+        const halo = new THREE.Mesh(
+          new THREE.SphereGeometry(1.82, 48, 32),
+          new THREE.MeshBasicMaterial({ color: 0x35f7ff, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending })
         );
-        shine.addColorStop(0, "rgba(255,255,255,.6)");
-        shine.addColorStop(0.5, "rgba(255,255,255,.13)");
-        shine.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = shine;
-        ctx.beginPath();
-        ctx.arc(center.x - drawRadius * 0.22, center.y - drawRadius * 0.25, drawRadius * 0.55, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalCompositeOperation = "source-over";
-
-        if (this.state.settings.colorblindMode) {
-          this.drawColorblindPattern(ctx, orb, center, drawRadius);
-        }
-
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = ColorMixer.isSpoiled(orb) ? "#9b91ab" : "rgba(255, 255, 255, 0.58)";
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, drawRadius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.fillStyle = ColorMixer.isWhite(orb) ? "#1b1d2e" : "#ffffff";
-        ctx.font = `700 ${Math.max(13, Math.round(radius * 0.78))}px Inter, Arial`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        if (ColorMixer.isWhite(orb)) ctx.fillText("+", center.x, center.y + 1);
-        if (ColorMixer.isMetallic(orb)) ctx.fillText("M", center.x, center.y + 1);
-        if (ColorMixer.isGem(orb)) ctx.fillText("*", center.x, center.y + 1);
-        ctx.restore();
+        this.group.add(halo);
+        this.light = new THREE.PointLight(0x35f7ff, 5, 17);
+        this.light.position.y = 1.2;
+        this.group.add(this.light);
+        this.scene.add(this.group);
       }
 
-      drawColorblindPattern(ctx, orb, center, radius) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, radius * 0.86, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.strokeStyle = "rgba(255,255,255,0.34)";
-        ctx.lineWidth = Math.max(1, radius * 0.07);
+      bindInput() {
+        window.addEventListener("keydown", e => this.keys.add(e.code));
+        window.addEventListener("keyup", e => this.keys.delete(e.code));
+        window.addEventListener("pointermove", e => this.setPointer(e.clientX, e.clientY));
+        window.addEventListener("pointerdown", e => this.setPointer(e.clientX, e.clientY));
 
-        if (ColorMixer.isSpoiled(orb)) {
-          ctx.beginPath();
-          ctx.moveTo(center.x - radius * 0.45, center.y - radius * 0.45);
-          ctx.lineTo(center.x + radius * 0.45, center.y + radius * 0.45);
-          ctx.moveTo(center.x + radius * 0.45, center.y - radius * 0.45);
-          ctx.lineTo(center.x - radius * 0.45, center.y + radius * 0.45);
-          ctx.stroke();
-        } else if (ColorMixer.isWhite(orb)) {
-          ctx.beginPath();
-          ctx.arc(center.x, center.y, radius * 0.35, 0, Math.PI * 2);
-          ctx.stroke();
-        } else {
-          const hue = ColorMixer.rgbToHue(orb.rgb);
-          if (hue < 60 || hue > 330) {
-            for (let x = center.x - radius; x < center.x + radius; x += radius * 0.32) {
-              ctx.beginPath();
-              ctx.moveTo(x, center.y - radius);
-              ctx.lineTo(x + radius, center.y + radius);
-              ctx.stroke();
-            }
-          } else if (hue < 170) {
-            for (let y = center.y - radius; y < center.y + radius; y += radius * 0.32) {
-              ctx.beginPath();
-              ctx.moveTo(center.x - radius, y);
-              ctx.lineTo(center.x + radius, y);
-              ctx.stroke();
-            }
-          } else {
-            for (let x = center.x - radius; x < center.x + radius; x += radius * 0.34) {
-              ctx.beginPath();
-              ctx.moveTo(x, center.y - radius);
-              ctx.lineTo(x, center.y + radius);
-              ctx.stroke();
-            }
+        const joystick = document.getElementById("joystick");
+        const knob = document.getElementById("knob");
+        let joyId = null;
+        joystick.addEventListener("pointerdown", e => {
+          e.stopPropagation();
+          joyId = e.pointerId;
+          joystick.setPointerCapture(joyId);
+          this.updateJoystick(e, joystick, knob);
+        });
+        joystick.addEventListener("pointermove", e => {
+          if (e.pointerId === joyId) {
+            e.stopPropagation();
+            this.updateJoystick(e, joystick, knob);
           }
-        }
-        ctx.restore();
-      }
-
-      drawEffects(ctx, layer) {
-        const now = this.animationTime;
-        ctx.save();
-        ctx.globalCompositeOperation = "screen";
-
-        if (layer === "under") {
-          for (const shock of this.shockwaves) {
-            if (now < shock.start) continue;
-            const t = clamp((now - shock.start) / shock.duration, 0, 1);
-            ctx.strokeStyle = `rgba(${shock.color.r}, ${shock.color.g}, ${shock.color.b}, ${(1 - t) * 0.55})`;
-            ctx.lineWidth = 2 + (1 - t) * 7;
-            ctx.beginPath();
-            ctx.arc(shock.x, shock.y, this.easeInOutCubic(t) * shock.radius, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-        } else {
-          for (const trail of this.trails) {
-            if (now < trail.start) continue;
-            const t = clamp((now - trail.start) / trail.duration, 0, 1);
-            const alpha = Math.sin(t * Math.PI);
-            const gradient = ctx.createLinearGradient(trail.from.x, trail.from.y, trail.to.x, trail.to.y);
-            gradient.addColorStop(0, `rgba(${trail.sourceColor.r}, ${trail.sourceColor.g}, ${trail.sourceColor.b}, 0)`);
-            gradient.addColorStop(0.42, `rgba(${trail.sourceColor.r}, ${trail.sourceColor.g}, ${trail.sourceColor.b}, ${alpha * 0.6})`);
-            gradient.addColorStop(0.74, `rgba(${trail.targetColor.r}, ${trail.targetColor.g}, ${trail.targetColor.b}, ${alpha * 0.72})`);
-            gradient.addColorStop(1, `rgba(${trail.targetColor.r}, ${trail.targetColor.g}, ${trail.targetColor.b}, 0)`);
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = 4 + alpha * 13;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            const mx = (trail.from.x + trail.to.x) / 2 + Math.sin(t * Math.PI) * 16;
-            const my = (trail.from.y + trail.to.y) / 2 - Math.sin(t * Math.PI) * 20;
-            ctx.moveTo(trail.from.x, trail.from.y);
-            ctx.quadraticCurveTo(mx, my, trail.to.x, trail.to.y);
-            ctx.stroke();
-          }
-
-          for (const flash of this.flashes) {
-            if (now < flash.start) continue;
-            const t = clamp((now - flash.start) / flash.duration, 0, 1);
-            const radius = flash.radius * (0.35 + t);
-            const gradient = ctx.createRadialGradient(flash.x, flash.y, 0, flash.x, flash.y, radius);
-            gradient.addColorStop(0, `rgba(${flash.color.r}, ${flash.color.g}, ${flash.color.b}, ${(1 - t) * 0.72})`);
-            gradient.addColorStop(0.55, `rgba(${flash.color.r}, ${flash.color.g}, ${flash.color.b}, ${(1 - t) * 0.22})`);
-            gradient.addColorStop(1, `rgba(${flash.color.r}, ${flash.color.g}, ${flash.color.b}, 0)`);
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(flash.x, flash.y, radius, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          for (const sparkle of this.sparkles) {
-            if (now < sparkle.start) continue;
-            const t = clamp((now - sparkle.start) / sparkle.duration, 0, 1);
-            ctx.fillStyle = `rgba(${sparkle.color.r}, ${sparkle.color.g}, ${sparkle.color.b}, ${(1 - t) * 0.8})`;
-            ctx.beginPath();
-            ctx.arc(sparkle.x, sparkle.y, sparkle.size * (1 + t), 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        ctx.restore();
-      }
-
-      lighten(rgb, amount) {
-        return {
-          r: Math.round(rgb.r + (255 - rgb.r) * amount),
-          g: Math.round(rgb.g + (255 - rgb.g) * amount),
-          b: Math.round(rgb.b + (255 - rgb.b) * amount)
+        });
+        const end = e => {
+          if (e.pointerId !== joyId) return;
+          e.stopPropagation();
+          joyId = null;
+          this.hasTouchMove = false;
+          this.touchMove.set(0, 0);
+          knob.style.transform = "translate(0px, 0px)";
         };
+        joystick.addEventListener("pointerup", end);
+        joystick.addEventListener("pointercancel", end);
       }
 
-      darken(rgb, amount) {
-        return {
-          r: Math.round(rgb.r * (1 - amount)),
-          g: Math.round(rgb.g * (1 - amount)),
-          b: Math.round(rgb.b * (1 - amount))
-        };
+      updateJoystick(e, joystick, knob) {
+        const rect = joystick.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        const len = Math.hypot(x, y);
+        const max = rect.width * 0.34;
+        const nx = len > max ? x / len * max : x;
+        const ny = len > max ? y / len * max : y;
+        knob.style.transform = `translate(${nx}px, ${ny}px)`;
+        this.touchMove.set(nx / max, ny / max);
+        this.hasTouchMove = true;
       }
 
-      easeOutBack(t) {
-        const c1 = 1.70158;
-        const c3 = c1 + 1;
-        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      setPointer(x, y) {
+        this.pointer.x = x / window.innerWidth * 2 - 1;
+        this.pointer.y = -(y / window.innerHeight) * 2 + 1;
       }
 
-      easeInOutCubic(t) {
-        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      updateAim(camera) {
+        this.raycaster.setFromCamera(this.pointer, camera);
+        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        this.raycaster.ray.intersectPlane(plane, this.aimPoint);
       }
 
-      drawHint(ctx, width, height) {
-        ctx.fillStyle = "rgba(246, 237, 211, 0.78)";
-        ctx.font = "14px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText(
-          "Mix adjacent orbs. Tap a matching orb to pour. Use the Lab for upgrades and power-ups.",
-          width / 2,
-          height - 14
+      movementVector() {
+        const move = new THREE.Vector3();
+        if (this.keys.has("KeyW") || this.keys.has("ArrowUp")) move.z -= 1;
+        if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) move.z += 1;
+        if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) move.x -= 1;
+        if (this.keys.has("KeyD") || this.keys.has("ArrowRight")) move.x += 1;
+        if (this.hasTouchMove) {
+          move.x += this.touchMove.x;
+          move.z += this.touchMove.y;
+        }
+        if (move.lengthSq() > 1) move.normalize();
+        return move;
+      }
+
+      update(dt, timeScale, camera) {
+        this.updateAim(camera);
+        const move = this.movementVector();
+        this.velocity.lerp(move.multiplyScalar(this.speed), 1 - Math.pow(0.0002, dt));
+        this.position.addScaledVector(this.velocity, dt * timeScale);
+        this.position.x = clamp(this.position.x, -HALF_ARENA + 2, HALF_ARENA - 2);
+        this.position.z = clamp(this.position.z, -HALF_ARENA + 2, HALF_ARENA - 2);
+        this.group.position.copy(this.position);
+
+        const pulse = 1 + Math.sin(performance.now() * 0.007) * 0.08;
+        this.core.scale.setScalar(pulse);
+        this.light.intensity = this.shieldTimer > 0 ? 8 : 4.2 + pulse * 1.2;
+        this.light.color.setHex(this.shieldTimer > 0 ? 0x9dff4f : 0x35f7ff);
+        if (this.velocity.lengthSq() > 8) this.particles.trail(this.position, 0x35f7ff, rand(0.42, 0.82), 0.28);
+
+        this.cooldown -= dt * timeScale;
+        this.rapidTimer = Math.max(0, this.rapidTimer - dt * timeScale);
+        this.shieldTimer = Math.max(0, this.shieldTimer - dt * timeScale);
+        this.powerCharge = Math.min(100, this.powerCharge + dt * 5);
+        if (this.cooldown <= 0) this.shoot();
+
+        this.projectiles = this.projectiles.filter(p => {
+          p.life -= dt * timeScale;
+          p.mesh.position.addScaledVector(p.velocity, dt * timeScale);
+          p.light.position.copy(p.mesh.position);
+          p.mesh.lookAt(p.mesh.position.clone().add(p.velocity));
+          this.particles.trail(p.mesh.position, 0x35f7ff, 0.48, 0.18);
+          if (p.life <= 0 || Math.abs(p.mesh.position.x) > HALF_ARENA + 6 || Math.abs(p.mesh.position.z) > HALF_ARENA + 6) {
+            this.scene.remove(p.mesh, p.light);
+            p.mesh.geometry.dispose();
+            p.mesh.material.dispose();
+            return false;
+          }
+          return true;
+        });
+      }
+
+      shoot() {
+        const dir = this.aimPoint.clone().sub(this.position);
+        dir.y = 0;
+        if (dir.lengthSq() < 0.01) dir.set(0, 0, -1);
+        dir.normalize();
+
+        const mesh = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.22, 1.45, 8, 18),
+          new THREE.MeshBasicMaterial({ color: 0x9ffcff, transparent: true, opacity: 0.96, blending: THREE.AdditiveBlending })
         );
+        mesh.position.copy(this.position).addScaledVector(dir, 1.8);
+        mesh.position.y = 1.15;
+        mesh.lookAt(mesh.position.clone().add(dir));
+        const light = new THREE.PointLight(0x35f7ff, 2.2, 8);
+        light.position.copy(mesh.position);
+        this.scene.add(mesh, light);
+        this.projectiles.push({ mesh, light, velocity: dir.multiplyScalar(44), life: 1.35, damage: this.rapidTimer > 0 ? 16 : 24 });
+        this.cooldown = this.rapidTimer > 0 ? 0.07 : this.fireRate;
+        this.audio.play("shoot");
+      }
+
+      damage(amount) {
+        if (this.shieldTimer > 0) amount *= 0.25;
+        this.health = Math.max(0, this.health - amount);
+      }
+
+      heal(amount) {
+        this.health = Math.min(this.maxHealth, this.health + amount);
+      }
+
+      activate(type) {
+        if (type === "rapid") this.rapidTimer = 7;
+        if (type === "shield") this.shieldTimer = 6;
+      }
+
+      disposeProjectile(p) {
+        this.scene.remove(p.mesh, p.light);
+        p.mesh.geometry.dispose();
+        p.mesh.material.dispose();
+      }
+    }
+
+    class EnemyManager {
+      constructor(scene, particles, audio) {
+        this.scene = scene;
+        this.particles = particles;
+        this.audio = audio;
+        this.enemies = [];
+        this.pickups = [];
+        this.wave = 0;
+        this.toSpawn = 0;
+        this.spawnTimer = 0;
+        this.waveBreak = 1;
+        this.waveActive = false;
+      }
+
+      startWave() {
+        this.wave++;
+        this.toSpawn = 7 + Math.floor(this.wave * 2.7);
+        this.spawnTimer = 0.25;
+        this.waveActive = true;
+        this.audio.play("wave");
+      }
+
+      createEnemy(type) {
+        const fast = type === "fast";
+        const tank = type === "tank";
+        const color = fast ? 0xffd166 : tank ? 0xff3864 : 0xff2cfb;
+        const radius = fast ? 0.8 : tank ? 1.45 : 1.05;
+        const geo = tank ? new THREE.IcosahedronGeometry(radius, 1) : new THREE.OctahedronGeometry(radius, 1);
+        const mat = new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: tank ? 2.2 : 2.7,
+          roughness: 0.28,
+          metalness: 0.22
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        const light = new THREE.PointLight(color, tank ? 3.8 : 2.8, tank ? 14 : 10);
+        light.position.y = 1.2;
+        mesh.add(light);
+        const side = Math.floor(Math.random() * 4);
+        const p = rand(-HALF_ARENA, HALF_ARENA);
+        const edge = HALF_ARENA + 3;
+        mesh.position.set(side === 0 ? -edge : side === 1 ? edge : p, radius, side === 2 ? -edge : side === 3 ? edge : p);
+        this.scene.add(mesh);
+        this.enemies.push({
+          mesh,
+          radius,
+          color,
+          health: fast ? 32 + this.wave * 2 : tank ? 115 + this.wave * 12 : 58 + this.wave * 6,
+          maxHealth: fast ? 32 + this.wave * 2 : tank ? 115 + this.wave * 12 : 58 + this.wave * 6,
+          speed: (fast ? 9.2 : tank ? 3.6 : 5.6) + this.wave * 0.2,
+          damage: fast ? 8 : tank ? 22 : 13,
+          hitCooldown: 0
+        });
+      }
+
+      update(dt, timeScale, player, ui, game) {
+        if (!this.waveActive && this.enemies.length === 0 && this.toSpawn <= 0) {
+          this.waveBreak -= dt;
+          if (this.waveBreak <= 0) {
+            this.startWave();
+            ui.setStatus(`Wave ${this.wave} online`);
+          }
+        }
+
+        if (this.toSpawn > 0) {
+          this.spawnTimer -= dt * timeScale;
+          if (this.spawnTimer <= 0) {
+            this.createEnemy(Math.random() < 0.22 + this.wave * 0.01 ? "tank" : Math.random() < 0.45 ? "fast" : "normal");
+            this.toSpawn--;
+            this.spawnTimer = Math.max(0.18, 0.76 - this.wave * 0.035);
+          }
+        }
+
+        for (const enemy of this.enemies) {
+          enemy.hitCooldown = Math.max(0, enemy.hitCooldown - dt * timeScale);
+          const dir = player.position.clone().sub(enemy.mesh.position);
+          dir.y = 0;
+          if (dir.lengthSq() > 0) dir.normalize();
+          enemy.mesh.position.addScaledVector(dir, enemy.speed * dt * timeScale);
+          enemy.mesh.rotation.x += dt * timeScale * (enemy.speed * 0.7);
+          enemy.mesh.rotation.y += dt * timeScale * 1.7;
+
+          const distance = enemy.mesh.position.distanceTo(player.position);
+          if (distance < enemy.radius + player.radius && enemy.hitCooldown <= 0) {
+            enemy.hitCooldown = 0.7;
+            player.damage(enemy.damage);
+            game.onPlayerHit();
+          }
+        }
+
+        this.handleProjectileHits(player, game);
+        this.updatePickups(dt, timeScale, player, game);
+
+        if (this.waveActive && this.toSpawn <= 0 && this.enemies.length === 0) {
+          this.waveActive = false;
+          this.waveBreak = 2.25;
+          game.score += this.wave * 250;
+          player.powerCharge = Math.min(100, player.powerCharge + 20);
+          ui.setStatus(`Wave ${this.wave} cleared`);
+        }
+      }
+
+      handleProjectileHits(player, game) {
+        for (let i = player.projectiles.length - 1; i >= 0; i--) {
+          const p = player.projectiles[i];
+          for (let j = this.enemies.length - 1; j >= 0; j--) {
+            const e = this.enemies[j];
+            if (p.mesh.position.distanceTo(e.mesh.position) < e.radius + 0.7) {
+              e.health -= p.damage;
+              e.mesh.scale.setScalar(1 + (1 - e.health / e.maxHealth) * 0.32);
+              this.particles.flash(p.mesh.position, 0x35f7ff, 2.8, 0.11);
+              this.audio.play("hit");
+              player.disposeProjectile(p);
+              player.projectiles.splice(i, 1);
+              if (e.health <= 0) this.killEnemy(j, game, player);
+              break;
+            }
+          }
+        }
+      }
+
+      killEnemy(index, game, player) {
+        const enemy = this.enemies[index];
+        const pos = enemy.mesh.position.clone();
+        this.particles.burst(pos, enemy.color, enemy.radius > 1.2 ? 150 : 95, enemy.radius);
+        this.particles.flash(pos, enemy.color, enemy.radius > 1.2 ? 11 : 8, 0.24);
+        this.scene.remove(enemy.mesh);
+        enemy.mesh.geometry.dispose();
+        enemy.mesh.material.dispose();
+        this.enemies.splice(index, 1);
+        game.combo = Math.min(12, game.combo + 0.15);
+        game.score += Math.round((enemy.radius > 1.2 ? 180 : 90) * game.combo);
+        player.powerCharge = Math.min(100, player.powerCharge + (enemy.radius > 1.2 ? 6 : 3.2));
+        this.audio.play("death");
+        if (Math.random() < 0.3) this.dropPickup(pos);
+      }
+
+      dropPickup(position) {
+        const type = pick(["heal", "rapid", "shield", "nova", "multi"]);
+        const color = { heal: 0x9dff4f, rapid: 0x35f7ff, shield: 0xffd166, nova: 0xff2cfb, multi: 0xffffff }[type];
+        const mesh = new THREE.Mesh(
+          new THREE.TorusKnotGeometry(0.48, 0.15, 48, 8),
+          new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 2.8, roughness: 0.18, metalness: 0.4 })
+        );
+        mesh.position.copy(position);
+        mesh.position.y = 0.95;
+        const light = new THREE.PointLight(color, 2.7, 9);
+        light.position.y = 1;
+        mesh.add(light);
+        this.scene.add(mesh);
+        this.pickups.push({ mesh, type, color, age: 0 });
+      }
+
+      updatePickups(dt, timeScale, player, game) {
+        this.pickups = this.pickups.filter(p => {
+          p.age += dt * timeScale;
+          p.mesh.rotation.x += dt * 2.2;
+          p.mesh.rotation.y += dt * 3.4;
+          p.mesh.position.y = 0.95 + Math.sin(p.age * 5) * 0.24;
+          if (p.mesh.position.distanceTo(player.position) < 2.1) {
+            if (p.type === "heal") player.heal(25);
+            if (p.type === "rapid") player.activate("rapid");
+            if (p.type === "shield") player.activate("shield");
+            if (p.type === "multi") game.combo = Math.min(12, game.combo + 1);
+            if (p.type === "nova") game.nova();
+            game.onPowerup(p.mesh.position, p.color);
+            this.scene.remove(p.mesh);
+            p.mesh.geometry.dispose();
+            p.mesh.material.dispose();
+            return false;
+          }
+          return true;
+        });
+      }
+
+      nova(origin, game, player) {
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+          const enemy = this.enemies[i];
+          if (enemy.mesh.position.distanceTo(origin) < 18) {
+            enemy.health -= 150 + this.wave * 8;
+            if (enemy.health <= 0) this.killEnemy(i, game, player);
+          }
+        }
+      }
+
+      clear() {
+        [...this.enemies, ...this.pickups].forEach(item => {
+          this.scene.remove(item.mesh);
+          item.mesh.geometry.dispose();
+          item.mesh.material.dispose();
+        });
+        this.enemies = [];
+        this.pickups = [];
+        this.toSpawn = 0;
+      }
+    }
+
+    class UIManager {
+      constructor() {
+        this.score = document.getElementById("score");
+        this.wave = document.getElementById("wave");
+        this.combo = document.getElementById("combo");
+        this.healthFill = document.getElementById("healthFill");
+        this.healthText = document.getElementById("healthText");
+        this.powerFill = document.getElementById("powerFill");
+        this.powerText = document.getElementById("powerText");
+        this.statusLine = document.getElementById("statusLine");
+        this.damageOverlay = document.getElementById("damageOverlay");
+        this.startScreen = document.getElementById("startScreen");
+        this.gameOverScreen = document.getElementById("gameOverScreen");
+        this.finalScore = document.getElementById("finalScore");
+        this.finalWave = document.getElementById("finalWave");
+      }
+
+      update(game, player, enemyManager) {
+        this.score.textContent = Math.floor(game.score).toLocaleString();
+        this.wave.textContent = Math.max(1, enemyManager.wave);
+        this.combo.textContent = `x${game.combo.toFixed(1)}`;
+        const health = clamp(player.health / player.maxHealth, 0, 1);
+        this.healthFill.style.transform = `scaleX(${health})`;
+        this.healthText.textContent = `${Math.ceil(health * 100)}%`;
+        this.powerFill.style.width = `${player.powerCharge}%`;
+        this.powerText.textContent = player.powerCharge >= 100 ? "Nova ready" : `${Math.floor(player.powerCharge)}%`;
+      }
+
+      setStatus(text) {
+        this.statusLine.textContent = text;
+      }
+
+      flashDamage() {
+        this.damageOverlay.classList.remove("hit");
+        void this.damageOverlay.offsetWidth;
+        this.damageOverlay.classList.add("hit");
+      }
+
+      showStart(show) {
+        this.startScreen.classList.toggle("hidden", !show);
+      }
+
+      showGameOver(score, wave) {
+        this.finalScore.textContent = Math.floor(score).toLocaleString();
+        this.finalWave.textContent = wave;
+        this.gameOverScreen.classList.remove("hidden");
+      }
+
+      hideGameOver() {
+        this.gameOverScreen.classList.add("hidden");
+      }
+    }
+
+    class Game {
+      constructor() {
+        this.sceneSetup = new SceneSetup(document.getElementById("game"));
+        this.audio = new AudioManager();
+        this.particles = new ParticleSystem(this.sceneSetup.scene);
+        this.player = new PlayerController(this.sceneSetup.scene, this.particles, this.audio);
+        this.enemies = new EnemyManager(this.sceneSetup.scene, this.particles, this.audio);
+        this.ui = new UIManager();
+        this.clock = new THREE.Clock();
+        this.running = false;
+        this.score = 0;
+        this.combo = 1;
+        this.timeScale = 1;
+        this.slowTimer = 0;
+        this.bindButtons();
+        this.loop();
+      }
+
+      bindButtons() {
+        const start = () => {
+          this.audio.init();
+          this.reset();
+          this.running = true;
+          this.ui.showStart(false);
+          this.ui.hideGameOver();
+        };
+        document.getElementById("startButton").addEventListener("click", start);
+        document.getElementById("restartButton").addEventListener("click", start);
+        window.addEventListener("keydown", e => {
+          if (e.code === "Space" && this.player.powerCharge >= 100 && this.running) this.nova();
+        });
+      }
+
+      reset() {
+        this.enemies.clear();
+        for (const p of this.player.projectiles) this.player.disposeProjectile(p);
+        this.player.projectiles = [];
+        this.player.position.set(0, 1, 0);
+        this.player.health = 100;
+        this.player.powerCharge = 0;
+        this.player.rapidTimer = 0;
+        this.player.shieldTimer = 0;
+        this.score = 0;
+        this.combo = 1;
+        this.timeScale = 1;
+        this.slowTimer = 0;
+        this.enemies.wave = 0;
+        this.enemies.waveBreak = 0.4;
+        this.enemies.waveActive = false;
+        this.ui.setStatus("Wave breach imminent");
+      }
+
+      onPlayerHit() {
+        this.combo = 1;
+        this.ui.flashDamage();
+        this.sceneSetup.addShake(0.55);
+        this.audio.play("playerHit");
+        if (navigator.vibrate) navigator.vibrate(60);
+      }
+
+      onPowerup(position, color) {
+        this.timeScale = 0.3;
+        this.slowTimer = 0.3;
+        this.particles.burst(position, color, 70, 0.8);
+        this.particles.flash(position, color, 12, 0.3);
+        this.sceneSetup.addShake(0.38);
+        this.audio.play("pickup");
+      }
+
+      nova() {
+        this.player.powerCharge = 0;
+        this.enemies.nova(this.player.position, this, this.player);
+        this.particles.flash(this.player.position, 0xff2cfb, 22, 0.42);
+        this.particles.burst(this.player.position, 0xff2cfb, 220, 1.25);
+        this.sceneSetup.addShake(1.1);
+        this.audio.play("nova");
+      }
+
+      loop() {
+        requestAnimationFrame(() => this.loop());
+        const rawDt = Math.min(this.clock.getDelta(), 0.04);
+        if (this.slowTimer > 0) {
+          this.slowTimer -= rawDt;
+          if (this.slowTimer <= 0) this.timeScale = 1;
+        }
+
+        if (this.running) {
+          this.score += rawDt * 8 * this.combo;
+          this.combo = Math.max(1, this.combo - rawDt * 0.04);
+          this.player.update(rawDt, this.timeScale, this.sceneSetup.camera);
+          this.enemies.update(rawDt, this.timeScale, this.player, this.ui, this);
+          if (this.player.health <= 0) {
+            this.running = false;
+            this.particles.burst(this.player.position, 0x35f7ff, 260, 1.5);
+            this.particles.flash(this.player.position, 0xff3864, 20, 0.48);
+            this.sceneSetup.addShake(1.2);
+            this.ui.showGameOver(this.score, Math.max(1, this.enemies.wave));
+          }
+        }
+
+        this.particles.update(rawDt * this.timeScale);
+        this.sceneSetup.update(rawDt, this.player.position);
+        this.ui.update(this, this.player, this.enemies);
+        this.sceneSetup.render();
       }
     }
 
     try {
       new Game();
     } catch (error) {
+      document.body.innerHTML = `<main style="padding:24px;color:#e9fbff;background:#02030a;font:18px Arial"><h1>Neon Surge could not start</h1><pre>${String(error && error.stack ? error.stack : error)}</pre></main>`;
       console.error(error);
-      document.body.innerHTML = `
-        <main style="max-width:680px;margin:40px auto;padding:24px;background:#171a2e;color:#f6edd3;border:1px solid #b9914d;font-family:Arial,sans-serif">
-          <h1 style="font-family:Georgia,serif;color:#ffd978">Color Alchemist could not start</h1>
-          <p>The browser reported this startup error:</p>
-          <pre style="white-space:pre-wrap;background:#070912;padding:12px;border-radius:6px">${String(error && error.message ? error.message : error)}</pre>
-        </main>
-      `;
     }
   </script>
 </body>

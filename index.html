@@ -445,6 +445,10 @@
     const pick = list => list[Math.floor(Math.random() * list.length)];
     const tmpVec = new THREE.Vector3();
     const tmpVec2 = new THREE.Vector3();
+    const pushDataLayerEvent = (eventName, params = {}) => {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: eventName, ...params });
+    };
 
     class AudioManager {
       constructor() {
@@ -989,12 +993,19 @@
         this.waveActive = false;
       }
 
-      startWave() {
+      startWave(game) {
         this.wave++;
         this.toSpawn = 7 + Math.floor(this.wave * 2.7);
         this.spawnTimer = 0.25;
         this.waveActive = true;
         this.audio.play("wave");
+        if (game) {
+          pushDataLayerEvent("level_up", {
+            level: this.wave,
+            score: Math.floor(game.score),
+            wave: this.wave
+          });
+        }
       }
 
       createEnemy(type) {
@@ -1035,7 +1046,7 @@
         if (!this.waveActive && this.enemies.length === 0 && this.toSpawn <= 0) {
           this.waveBreak -= dt;
           if (this.waveBreak <= 0) {
-            this.startWave();
+            this.startWave(game);
             ui.setStatus(`Wave ${this.wave} online`);
           }
         }
@@ -1075,6 +1086,10 @@
           game.score += this.wave * 250;
           player.powerCharge = Math.min(100, player.powerCharge + 20);
           ui.setStatus(`Wave ${this.wave} cleared`);
+          pushDataLayerEvent("wave_complete", {
+            wave: this.wave,
+            score: Math.floor(game.score)
+          });
         }
       }
 
@@ -1141,7 +1156,7 @@
             if (p.type === "shield") player.activate("shield");
             if (p.type === "multi") game.combo = Math.min(12, game.combo + 1);
             if (p.type === "nova") game.nova();
-            game.onPowerup(p.mesh.position, p.color);
+            game.onPowerup(p.mesh.position, p.color, p.type);
             this.scene.remove(p.mesh);
             p.mesh.geometry.dispose();
             p.mesh.material.dispose();
@@ -1251,6 +1266,10 @@
           this.running = true;
           this.ui.showStart(false);
           this.ui.hideGameOver();
+          pushDataLayerEvent("game_start", {
+            score: 0,
+            wave: 1
+          });
         };
         document.getElementById("startButton").addEventListener("click", start);
         document.getElementById("restartButton").addEventListener("click", start);
@@ -1286,13 +1305,17 @@
         if (navigator.vibrate) navigator.vibrate(60);
       }
 
-      onPowerup(position, color) {
+      onPowerup(position, color, type) {
         this.timeScale = 0.3;
         this.slowTimer = 0.3;
         this.particles.burst(position, color, 70, 0.8);
         this.particles.flash(position, color, 12, 0.3);
         this.sceneSetup.addShake(0.38);
         this.audio.play("pickup");
+        pushDataLayerEvent("power_up_used", {
+          power_up: type,
+          count: 1
+        });
       }
 
       nova() {
@@ -1323,6 +1346,11 @@
             this.particles.flash(this.player.position, 0xff3864, 20, 0.48);
             this.sceneSetup.addShake(1.2);
             this.ui.showGameOver(this.score, Math.max(1, this.enemies.wave));
+            pushDataLayerEvent("game_over", {
+              score: Math.floor(this.score),
+              wave: Math.max(1, this.enemies.wave),
+              reason: "health_zero"
+            });
           }
         }
 
